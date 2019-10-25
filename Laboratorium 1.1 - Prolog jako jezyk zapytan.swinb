@@ -1,0 +1,244 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Laboratorium 1.1 - Prolog jako język zapytań
+
+Przedmiotem tego laboratorium będzie bazujący na logice formalnej język Prolog. Nasza praca będzie polegała na projektowaniu baz wiedzy o świecie oraz zadawaniu odpowiednich pytań odnośnie tego świata. Rolą Prologa jest wywnioskowanie odpowiedzi na nasze pytania.
+
+PS W czasie lektury laboratorium zachęcam do psucia występujących w nim przykładów (wszystko powinno być edytowalne :))
+</div>
+
+<div class="nb-cell markdown" name="md2">
+## Zapytania o identyczność
+
+Niektóre z *zapytań* są niezależne od bazy wiedzy, np.
+</div>
+
+<div class="nb-cell query" name="q1">
+rybka = akwarium.
+</div>
+
+<div class="nb-cell markdown" name="md3">
+to przykładowe *zapytanie* ma w języku naturalnym znaczenie: "czy _rybka_ to to samo co _akwarium_?" (proszę zwrócić uwagę, że zapytanie w Prologu zawsze kończymy *kropką*) W analogii do logiki, `rybka` i `akwarium` to nazwy stałych (w Prologu każdy napis zaczynający się z małej litery to stała), zaś symbol `=` oznacza identyczność. Jeśli ktoś nacisnie guzik _play_ po prawej stronie zapytanie, otrzyma odpowiedź `false`. Oznacza to, że zdaniem Prologa `rybka` nie jest identyczna z `akwarium`. W przypadku zapytania:
+</div>
+
+<div class="nb-cell query" name="q2">
+rybka = rybka.
+</div>
+
+<div class="nb-cell markdown" name="md4">
+Prolog już nie ma żadnych wątpliwości: _rybka_ to to samo, co _rybka_. Żeby sprawę sobie uprościć, możemy do pierwszego zapytania dołożyć symbol negacji `\+`:
+</div>
+
+<div class="nb-cell query" name="q3">
+\+ rybka = akwarium.
+</div>
+
+<div class="nb-cell markdown" name="md5">
+Tym razem powinniśmy już otrzymać odpowiedź `true`. Powyższy zapis jest równoważny poniższej skróconej formie:
+</div>
+
+<div class="nb-cell query" name="q4">
+rybka \= akwarium.
+</div>
+
+<div class="nb-cell markdown" name="md6">
+gdzie `\=` to symbol zanegowanej identyczności. W Prologu identyczne są po prostu takie same napisy (np. _quokka_ i _quokka_, _2131as_ i _2131as_) - nazywany to *założeniem o unikalności nazw* (ang. _Unique Name Assumption_)
+</div>
+
+<div class="nb-cell markdown" name="md7">
+## Unifikacja
+
+Poprzednia sekcja _troszkę_ kłamała - w Prologu `=` nie oznacza wcale identyczności. W rzeczywistości `=` oznacza *unifikację* - czyli takie podstawienie wartości pod zmienne, aby dwa termy były identyczne (były takimi samymi napisami), np.
+</div>
+
+<div class="nb-cell query" name="q5">
+A = akwarium.
+</div>
+
+<div class="nb-cell markdown" name="md8">
+gdzie `A` to jest nazwa zmiennej (zmienną w Prologu jest każdy napis który zaczyna się wielką literą lub podkreśleniem). Takie zapytanie w języku naturalnym znaczy: "Czy istnieje takie podstawienie pod zmienną `A`, żeby była ona identyczna napisowi `akwarium`?". Po wciśnięciu _play_ Prolog odpowie nam, że `A` jest równe `akwarium`. Zwróci nam takie podstawienie, dla którego zachodzi identyczność napisów! Gdy w zapytaniu nie ma żadnej zmiennej, pytanie o *unifikację* jest tożsame pytaniu o identyczność. 
+
+Negacja *unifikacji* znaczy już zupełnie coś innego niż negacja identyczności:
+</div>
+
+<div class="nb-cell query" name="q6">
+A \= akwarium.
+</div>
+
+<div class="nb-cell markdown" name="md9">
+oznacza 'Czy unifikacja zmiennej A i stałeh `akwarium` jest niemożliwa?'. Prolog stwierdzi, że to nieprawda, bo przecież pod zmienną może podstawić `akwarium`, więc unifikacja jest wykonalna.
+
+Warto zauważyć, że zmienna może występować w zapytaniu kilka razy, np.
+</div>
+
+<div class="nb-cell query" name="q7">
+suma(X, 5, X) = suma(4, 5, X).
+</div>
+
+<div class="nb-cell markdown" name="md10">
+Dla jasności - Prolog bazuje na logice predykatów i ma podobną notację: `suma(X,5,X)` to *funktor* trójargumentowy. Funktory opisują złożone termy, w tym przypadku funktor wskazuję na sumę trzech liczb. Po naciśnięciu `play` dowiemy się, że =X= jest równy `4`. Gdyby jednak wprowadzić drobną zmianę:
+</div>
+
+<div class="nb-cell query" name="q8">
+suma(X, 5, X) = suma(4, 5, suma(3, 2, 1)).
+</div>
+
+<div class="nb-cell markdown" name="md11">
+otrzymamy odpowiedź: `false`, bo =X= nie może być równocześnie równy `4` i `suma(3,2,1)`. Warto zauważyć, że argumentem funktora może być dowolny term, także i funktor.
+</div>
+
+<div class="nb-cell markdown" name="md12">
+## Zmienna anonimowa
+
+Czasem, nie obchodzi nas podstawienie pod wszystkie zmienne, szczególnie w przypadku dużych funktorów. Żeby pozbyć się niepotrzebnych odpowiedzi możemy posłużyć się zmienną anonimową `_`:
+</div>
+
+<div class="nb-cell query" name="q9">
+suma(X, _, _) = suma(1, 2, 3).
+</div>
+
+<div class="nb-cell markdown" name="md13">
+Powyższa unifikacja powiedzie się bez problemu, ale Prolog nie będzie się przejmował wartościami podkreśleń.
+</div>
+
+<div class="nb-cell markdown" name="md14">
+## Baza wiedzy
+
+Zapytania o unifikację są użyteczne, ale w zasadzie w żaden sposób nie poszerzają naszej wiedzy. Wszystko robi się ciekawsze, gdy zapytania będziemy kierować do konkretnej *bazy wiedzy*. Bazą wiedzy nazywamy ciąg *faktów*, czyli zdań logiki predykatów, np. `jest_bratem(romek, bartek).` jest stwierdzeniem faktu, że niejaki _romek_ jest bratem _bartka_. Przykładowa baza wiedzy może wyglądać następująco:
+</div>
+
+<div class="nb-cell program" name="p1">
+% jest_rodzicem(imię rodzica, imię dziecka)
+jest_rodzicem(kasia,robert).
+jest_rodzicem(tomek,robert).
+jest_rodzicem(tomek,eliza).
+ 
+% jest_kobietą(imię kobiety)
+jest_kobietą(kasia).
+jest_kobietą(eliza).
+
+% jest_mężczyzną(imię mężczyzny)
+jest_mężczyzną(tomek).
+jest_mężczyzną(robert).
+</div>
+
+<div class="nb-cell markdown" name="md15">
+Powyższa baza wiedzy zawiera trzy rodzaje faktów o kilku osobach. Nad niektórymi faktami po symbolu procentu są umieszczone komentarze - nie mają one znaczenia dla Prologa, ale pozwalają użytkownikowi lepiej zrozumieć intencje autora. Proszę też zauważyć, że w zapytaniach linijka rozpoczynała się znakiem zapytania - w bazach wiedzy nic takiego nie widać.
+
+Dla tak skonstruowanej bazy wiedzy możemy teraz zadawać pytania:
+</div>
+
+<div class="nb-cell query" name="q10">
+jest_kobietą(kasia).
+</div>
+
+<div class="nb-cell markdown" name="md16">
+To pytanie, "czy _kasia_ jest kobietą?". Prolog powie, że tak, zgodnie z faktami. Można popróbować jeszcze kilku takich pytań:
+</div>
+
+<div class="nb-cell query" name="q11">
+jest_mężczyzną(kasia).
+</div>
+
+<div class="nb-cell query" name="q12">
+jest_rodzicem(kasia, robert).
+</div>
+
+<div class="nb-cell query" name="q13">
+jest_mężczyzną(stefan).
+</div>
+
+<div class="nb-cell markdown" name="md17">
+Niestety `stefana` w bazie nie ma i otrzymamy odpowiedź `false`. W logice byłby to problem: w jaki sposób możemy mówić o bytach nieistniejących? W Prologu nie ma takiego problemu!
+</div>
+
+<div class="nb-cell query" name="q14">
+\+ jest_mężczyzną(stefan).
+</div>
+
+<div class="nb-cell markdown" name="md18">
+"Czy nie jest prawdą, że _stefan_ jest mężczyzną?" zwróci `true`! Dla Prologa prawda jest równoznaczna z tym, co jest w stanie wywnioskować. Skoro nie jest w stanie wywnioskować nic o `stefanie`, to negacja dowolnego pytania o `stefana` w tej bazie wiedzy zwróci `true`. Taką właściwość Prologa nazywamy *założeniem o zamkniętym świecie* (ang. _Closed World Assumption_).
+</div>
+
+<div class="nb-cell markdown" name="md19">
+## Zapytania ze zmiennymi 
+
+Pytanie o zachodzenie faktów jest fascynujące, ale z czasem się nudzi. Podobnie jak w unifikacji, rzecz naprawdę robi się ciekawa, gdy pojawią się zmienne. Możemy wtedy zadać całą gamę nowych pytań:
+</div>
+
+<div class="nb-cell query" name="q15">
+jest_mężczyzną(X).
+</div>
+
+<div class="nb-cell markdown" name="md20">
+"Kto jest mężczyzną?" - Prolog szybko znajdzie nam odpowiedź! Co ciekawe, znajdzie ich nawet kilka - wystarczy nacisnąć przycisk _next_ i oglądać kolejne wyniki. Żeby było ciekawiej, możemy mieszać zmienne i stałe:
+</div>
+
+<div class="nb-cell query" name="q16">
+jest_rodzicem(tomek, X).
+</div>
+
+<div class="nb-cell markdown" name="md21">
+"Czyim rodzicem jest _tomek_?". Wszystko wydaje się w miarę intuicyjne (niektórzy spostrzegawczy mogli zauważyć nawet, że Prolog po prostu unifikuje kolejne zapytanie z kolejnymi faktami). Problemy rodzą się, gdy zaczniemy używać negacji.
+</div>
+
+<div class="nb-cell query" name="q17">
+\+ jest_mężczyzną(X).
+</div>
+
+<div class="nb-cell markdown" name="md22">
+Powyższe zapytanie wcale nie znaczy: "Kto nie jest mężczyzną?", tylko "Czy prawdą jest, że nie istnieje żaden mężczyzna?". Odpowiedzią jest oczywiście `false`. *Zawsze* (no, prawie zawsze), należy unikać tego typu pytań.
+</div>
+
+<div class="nb-cell markdown" name="md23">
+## Zapytania złożone
+
+Oczywiście, nie każde zapytanie musi się składać tylko z jednego elementu - *atomu* (wystąpienia predykatu, stwierdzenia unifikacji). Prawidłowym zapytanie byłoby na przykład:
+</div>
+
+<div class="nb-cell query" name="q18">
+jest_rodzicem(X,_), jest_kobietą(Y).
+</div>
+
+<div class="nb-cell markdown" name="md24">
+Symbol przecinka odpowiada logicznej koniunkcji, zatem pytanie brzmi "Kto jest rodzicem kogolwiek i kto jest kobietą?". Pytanie nie jest szczególnie interesujące, ponieważ składa się z dwóch atomów, korzystających z różnych zmiennych. Możemy natomiast dodać do tego zapytanie unifikacyjne:
+</div>
+
+<div class="nb-cell query" name="q19">
+jest_rodzicem(X,_), jest_kobietą(Y), X = Y.
+</div>
+
+<div class="nb-cell markdown" name="md25">
+Pytamy teraz o kogoś, kto jest rodzicem i jest identyczny z kimś, kto jest kobietą, co w języku naturalnym wyrażamy krócej pytaniem: "kto jest _matką_?". Bystry obserwator może zauważyć, że pytanie zapytanie unifikacyjne jest w powyższym zapytaniu zbędne; dużo lepsze jest krótsza, równoważna forma:
+</div>
+
+<div class="nb-cell query" name="q20">
+jest_rodzicem(X,_), jest_kobietą(X).
+</div>
+
+<div class="nb-cell markdown" name="md26">
+Czyli bycie matką definiujemy jako bycie rodzicem i bycie kobietą. Niegłupio. Czasem jednak zapytanie unifikacyjne jest nie do pominięcia, np. gdybyśmy chcieli zapytać o rodzeństwo (pary osób o wspólnym co najmniej jednym rodzicu), moglibyśmy sformułować następujące zapytanie:
+</div>
+
+<div class="nb-cell query" name="q21">
+jest_rodzicem(Rodzic, PierwszeDziecko), jest_rodzicem(Rodzic, DrugieDziecko).
+</div>
+
+<div class="nb-cell markdown" name="md27">
+Proszę uruchomić powyższe zapytanie: jaki jest efekt? Czy spełnia on oczekiwania?
+
+_|(...chwila skupienia...)|_
+
+Jeżeli już ktoś doszedł do wniosku, że zapytanie nie działa jak powinno, proszę spróbować jego lepszej formy:
+</div>
+
+<div class="nb-cell query" name="q22">
+jest_rodzicem(Rodzic, PierwszeDziecko), jest_rodzicem(Rodzic, DrugieDziecko), PierwszeDziecko \= DrugieDziecko.
+</div>
+
+<div class="nb-cell markdown" name="md28">
+Teraz lepiej, prawda? Jeżeli ktoś nadal widzi problem, to bardzo dobrze, ale dzisiaj nie będziemy się już nim zajmować i przejdziemu do tematu [reguł](pl_lab_1_2.swinb).
+</div>
+
+</div>

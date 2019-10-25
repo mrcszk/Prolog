@@ -1,0 +1,268 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Laboratorium 2.1 - Efekty Uboczne
+
+W tym laboratorium skupimy się na cechach Prologa, które różnią go od języków logicznych a przybliżają go do, tzw. języków programowania. Nauczymy się, jak wczytywać informacje od użytkownia systemu i jak je wypisywać na ekran. Kluczowy okaże się sposób, w jaki Prolog przetwarza zapytania i bazę wiedzy. Na koniec dowiemy się, jak możemy do istniejącej bazy wiedzy dopisywać nowe fakty z poziomu zapytań/reguł. Na potrzeby zajęć będziemy posługiwać się poniższą, znaną już nam skądinąd bazą wiedzy:
+</div>
+
+<div class="nb-cell program" name="p1">
+jest_matką(X,Y) :- jest_rodzicem(X,Y), 
+                   jest_kobietą(X).
+
+jest_ojcem(X,Y) :- jest_rodzicem(X,Y),
+                   jest_mężczyzną(X).
+
+jest_rodzeństwem(X,Y) :- jest_rodzicem(Z,X),
+                         jest_rodzicem(Z,Y), X \= Y.
+
+jest_bratem(X,Y) :- jest_rodzeństwem(X,Y),
+                    jest_mężczyzną(X).
+
+jest_siostrą(X,Y) :- jest_rodzeństwem(X,Y),
+                     jest_kobietą(X).
+
+jest_żoną(X,Y) :- jest_mężem(Y,X).
+
+jest_stryjem(X,Y) :- jest_ojcem(Z,Y),
+                     jest_bratem(X,Z).
+
+jest_stryjenką(X,Y) :- jest_ojcem(Z,Y),
+                       jest_siostrą(X,Z).
+
+jest_stryjenką(X,Y) :- jest_stryjem(Z,Y),
+                       jest_żoną(X,Z).
+
+jest_małżonkiem(X,Y) :- jest_mężem(X,Y).
+jest_małżonkiem(X,Y) :- jest_żoną(X,Y).
+
+jest_teściem(X,Y) :- jest_małżonkiem(Z,Y),
+                     jest_rodzicem(X,Z).
+
+jest_przodkiem(X,Y) :- jest_rodzicem(X,Y).
+jest_przodkiem(X,Y) :- jest_rodzicem(Z,Y),
+                       jest_przodkiem(X,Z).
+
+jest_krewnym(X,Y) :- jest_przodkiem(Z,X),
+                     jest_przodkiem(Z,Y),
+    				 X \= Y.
+
+jest_potomkiem(X,Y) :- jest_przodkiem(Y,X).
+
+
+jest_szwagrem_1(X,Y) :- jest_siostrą(Z,Y),
+                        jest_mężem(X,Z).
+
+% Proszę zwrócić uwagę, jak zrealizowana jest
+% symetryczność relacji bycia szwagrem:
+% w celu uniknięcia rekurencji użyty jest 
+% pomocniczny predykat jest_szwagrem_1/2
+jest_szwagrem(X,Y) :- jest_szwagrem_1(X,Y).
+jest_szwagrem(X,Y) :- jest_szwagrem_1(Y,X).
+
+% jest_rodzicem(imię rodzica, imię dziecka)
+jest_rodzicem(kasia,robert).
+jest_rodzicem(kasia,michał).
+jest_rodzicem(tomek,robert).
+jest_rodzicem(tomek,eliza).
+jest_rodzicem(robert,miriam).
+
+% jest_mężem(imię męża, imię żony)
+jest_mężem(tomek, kasia).
+jest_mężem(michał, faustyna).
+
+% jest_kobietą(imię kobiety)
+jest_kobietą(kasia).
+jest_kobietą(eliza).
+jest_kobietą(faustyna).
+
+% jest_mężczyzną(imię mężczyzny)
+jest_mężczyzną(tomek).
+jest_mężczyzną(robert).
+jest_mężczyzną(michał).
+
+'DO_NOT_PANIC' :- write('---- DO NOT PANIC ----'), nl, write('Nie stresuj się, nikt nie jest niczemu winien - to zapytanie nie mogło się udać za pierwszym razem'), nl.
+</div>
+
+<div class="nb-cell markdown" name="md2">
+## Kolejność przetwarzania zapytań
+
+Dotychczas te laboratoria żyły w świecie definicji, wnioskowania, ogólnie logiki. Problem polega na tym, że twórcy Prologa poszli na dość duży kompromis - kompromis, który sprawia, że Prolog jest językiem uniwersalnym, ale przestaje być językiem logicznym w prawdziwym tego słowa znaczeniu. Mianowicie, wbrew wszelkim regułom logiki: *kolejność ma znaczenie*. Poniższe zapytanie prezentuje tę właściwość na prostym przykładzie (predykat `write/1` wypisuje napis, predykat `nl` kończy linijkę):
+</div>
+
+<div class="nb-cell query" name="q1">
+write("Wypiszę się pierwszy"), nl, write("Wypiszę się drugi"), nl.
+</div>
+
+<div class="nb-cell markdown" name="md3">
+Wypisywanie na ekran napisów nie ma żadnego znaczenia z punktu widzenia wnioskowania, niemniej pokazuje, że *zapytania są przez Prolog intepretowane od lewej do prawej*. Poniższy przykład pokazuje nasz kompromis w bardziej drastyczny sposób (`read/1` prosi użytkownika o wpisanie termu i unifikuje go z podanym argumentem):
+</div>
+
+<div class="nb-cell query" name="q2">
+write("Podaj swoje imię"), nl, read(Imie), write("Twoję imię to: "), write(Imie), nl.
+</div>
+
+<div class="nb-cell markdown" name="md4">
+Gdyby to była logika, kolejność atomów nie miałaby znaczenia. Powyżej `read(Imie)` musi być jednak przed `write(Imie)` - proszę spróbować zamienić je miejscami, by zauważyć różnicę. Z drugiej strony, w obronie Prologa można powiedzieć, że logiki z reguły nie pozwalają na interakcję z użytkownikami.
+
+Bardziej niespodziewany przykład, gdy kolejność atomów w zapytanie ma kluczowe znaczenie, jest powiązany z obsługą unifikacji w Prologu. Proszę porównać wyniki dwóch poniższych zapytań:
+</div>
+
+<div class="nb-cell query" name="q3">
+jest_ojcem(Ojciec,_), \+ jest_kobietą(Ojciec).
+</div>
+
+<div class="nb-cell query" name="q4">
+\+ jest_kobietą(Ojciec), jest_ojcem(Ojciec,_).
+</div>
+
+<div class="nb-cell markdown" name="md5">
+## Przeszukiwanie bazy wiedzy
+
+Drugim miejscem, gdzie uwidacznia się kompromis, jest proces przeszukiwania bazy wiedzy. Proszę jeszcze raz przyjrzeć się wynikom zapytania:
+</div>
+
+<div class="nb-cell query" name="q5">
+jest_kobietą(X).
+</div>
+
+<div class="nb-cell markdown" name="md6">
+Czy kolejność wyników ma się jakoś w stosunku do kolejności faktów w bazie wiedzy? 
+
+Teraz proszę obejrzeć wyniki zapytania:
+</div>
+
+<div class="nb-cell query" name="q6">
+jest_stryjenką(X,_).
+</div>
+
+<div class="nb-cell markdown" name="md7">
+W jakiej kolejności zostały przetworzone reguły w bazie wiedzy?
+
+Jeżeli ktoś jeszcze nie zgadł, Prolog zachowuje się jak rasowy Europejczyk, czyli *czyta od lewej do prawej i od góry do dołu*.
+</div>
+
+<div class="nb-cell markdown" name="md8">
+## Porażka, czyli sterowanie przeszukiwaniem
+
+Skoro wiemy już, w jakiej kolejności Prolog przeprowadza wnioskowanie, możemy zastanowić się jak to możliwe, że zwraca więcej niż jeden wynik niektórych zapytań. Kluczem jest tu *porażka* (ang. _failure_) jako *mechanizm nawrotów*. Pewnie już wszyscy intuicyjnie zauważyli, że Prolog wnioskuje "na siłę", tzn. sprawdza od góry do dołu wzystkie fakty i reguły aż znajdzie odpowiedź na zapytanie. Jeżeli dana reguła/fakt nie odpowiada na zapytanie, Prolog traktuje to jako *porażkę* i szuka kolejnej drogi do znalezienia odpowiedzi. 
+
+Teraz, tak samo działa guzik *next*, który naciskamy, żeby uzyskać więcej odpowiedzi na zapytanie:
+</div>
+
+<div class="nb-cell query" name="q7">
+jest_mężczyzną(X).
+</div>
+
+<div class="nb-cell markdown" name="md9">
+Naciśnięcie przycisku *next* mówi Prologowi: odniosłeś *porażkę*, znajdź mi lepszą odpowiedź. Wystąpienie *porażki* wymusza na Prologu *nawrót*, tj. powrót do przeszukiwania bazy wiedzy w miejscu, do którego ostatnio dotarł i poniósł *porażkę*. Największe znaczenie ma to w przypadku predykatów rekurencyjnych. Proszę przyjrzeć się kolejności odpowiedzi na zapytanie:
+</div>
+
+<div class="nb-cell query" name="q8">
+jest_przodkiem(X,_).
+</div>
+
+<div class="nb-cell markdown" name="md10">
+Następnie proszę wziąć kartkę i długopis, i spróbować odtworzyć kolejność wnioskowania Prologa. 
+
+_|...piszemy i myślimy...|_
+
+_|...jeszcze chwilka, czy na pewno rozumiemy...|_
+
+_|...jeśli nie, to pytamy prowadzącego...|_
+
+_|...jeśli tak, to czytamy dalej:|_
+
+Powinniśmy zauważyć, że wynik zwracany jest, gdy udaje się spełnić przesłanki nierekurencyjnej reguły - która jest pierwszą regułą definiującą nasz predykat. Ktoś Dociekliwy (*KD*) mógłby zapytać:
+
+*KD*: Skoro ta reguła jest wykonywana na samym końcu, to czemu jest wpisana jako pierwsza w bazie wiedzy?
+
+A Hipotetyczny Ktoś (*HK*) zaznajomiony z tematem mógłby odpowiedzieć:
+
+*HK*: Bo chcemy, żeby Prolog najpierw sprawdził przypadek bazowy i tylko wtedy, gdy on nie działa, zagłębiał się w rekurencję.
+
+*KD*: Dlaczego? Przecież to nie ma znaczenie w tym przypadku?
+
+*HK*: Ale są przypadki, w których przypadek bazowy musi przerwać wnioskowanie, inaczej rekurencja nigdy by się nie skończyła. W naszym przypadku wszystko działa tylko dlatego, że liczba faktów `jest_rodzicem/2` jest skończona i w końcu przesłanki reguły rekurencyjnej przestają być spełniane. 
+
+*KD*: Czy może być inaczej?
+
+*HK*: Staramy uniknąć się takiej sytacji.
+
+*KD*: Aha.
+</div>
+
+<div class="nb-cell markdown" name="md11">
+### Wymuszanie nawracania
+
+Istnieją dwa słowa kluczowe, które pozwalają nam na sterowanie przeszukiwanie: =true=, =fail=. Pierwsze z nich mówi Prologowi, że wszystko się udało i w zasadzie nie jest używane, ponieważ: =|fakt(X,Y) :- true.|= oznacza tyle samo, co =|fakt(X,Y).|=. *fail* natomiast jest bardziej interesujący, ponieważ pozwala nam _oszukać_ Prolog i wymusić na nim nawrót. 
+
+---
+
+#### Ćwiczenie 
+
+Proszę uruchomić zapytania:
+</div>
+
+<div class="nb-cell query" name="q9">
+jest_mężczyzną(X).
+</div>
+
+<div class="nb-cell markdown" name="md12">
+oraz
+</div>
+
+<div class="nb-cell query" name="q10">
+jest_mężczyzną(X), write(X), nl, fail.
+</div>
+
+<div class="nb-cell markdown" name="md13">
+1. Jakie są różnice w działaniu obu tych zapytań i z czego wynikają?
+  2. Jaką instrukcję z popularnych języków programowania (np. Java, Python) można zasymulować używając słowa kluczowego *fail*?
+</div>
+
+<div class="nb-cell markdown" name="md14">
+## Modyfikacja bazy wiedzy
+
+W poprzednich ćwiczeniach nauczyliśmy się pytać użytkownika o wartość zmiennych (`read/1`). Byłoby to mało użyteczne, gdybyśmy nie mogli zapamiętać jego odpowiedzi. Predykatem, który służy dokładnie do tego celu jest predykat `assert/1`. Proszę wypróbować poniższe zapytanie:
+</div>
+
+<div class="nb-cell query" name="q11">
+'DO_NOT_PANIC', assert(jest_mężczyzną(mateusz)).
+</div>
+
+<div class="nb-cell markdown" name="md15">
+Powyższe zapytanie się nie powiodło, ale duży uspokajający napis na jego początku pozwala nam zachować spokój. Okazuje się, że predykat, który może mieć *dynamicznie* dopisywane fakty i reguły, musi być odpowiednio _zapowiedziany_. Żeby Prolog wiedział, że liczba mężczyzn w bazie jest zmienna, należy na początku programu dopisać magiczną linijkę:
+==
+:- dynamic jest_mężczyzną/1.
+==
+Magiczna linijką jest regułą bez głowy. Takie reguły nazywamy *celami* i ich ciała są wykonywane przez Prolog od razu po wczytaniu bazy wiedzy. W tym przypadku Prolog dowiaduje się, że gdzieś w bazie znajduje się predykat `jest_mężczyzną/1`, który będzie dynamicznie modyfikowany. To takie proste! Kiedy już powyższą linijkę wkleimy do naszej bazy wiedzy, możemy spróbować jeszcze raz:
+</div>
+
+<div class="nb-cell query" name="q12">
+assert(jest_mężczyzną(mateusz)), jest_mężczyzną(mateusz).
+</div>
+
+<div class="nb-cell markdown" name="md16">
+W normalnej bazie Prologowej fakt `jest_mężczyzną(mateusz)` zostałby już zapamiętany i byłby dostępny w kolejnych zapytaniach. W przypadku naszego notatnika każde zapytanie na nowo wczytuje bazę wiedzy, tym samym czyści dynamicznie zapamiętane fakty.
+
+Teraz, skoro potrafimy już dodawać fakty do bazy wiedzy, przydałaby nam się możliwość ich zapominania. Służą temu dwa predykaty: `rectract/1` i `retractall/1`. Różnica między nimi jest prosta: `rectract/1` zapomina *jeden* fakt, który unifikuje się z jego argumentem, `retractall/1` zapomina od razu *wszystkie* fakty, które unifikują się z jego argumentem, np. `rectractall(jest_mężczyzną(_))` spowoduje zapomnienie wszystkich dynamicznie wskazanych mężczyzn. Fakty, które są na stałe wpisane do bazy wiedzy, nie mogą zostać w ten sposób zapomnianie. Proszę sprawdzić działanie poniższego zapytania:
+</div>
+
+<div class="nb-cell query" name="q13">
+assert(jest_mężczyzną(mateusz)), retractall(jest_mężczyzną(_)), jest_mężczyzną(mateusz).
+</div>
+
+<div class="nb-cell markdown" name="md17">
+PS Żeby było śmieszniej, `assert/1` i `retract/1` pozwalają dodawać/usuwać nie tylko fakty, ale też całe reguły. Otwiera to ogromne możliwości, ale nie będziemy tego poruszać na laboratorium.
+</div>
+
+<div class="nb-cell markdown" name="md18">
+## Efekty uboczne
+
+Wypisywanie danych na ekran oraz zmienianie bazy danych są tak zwanymi *efektami ubocznymi*. Funkcja/predykat zawiera efekty uboczne, jeżeli realizuje inne operacje niż zwracanie wyniku. Funkcja bez efektów ubocznych jest nazywana często [funkcją czystą](https://en.wikipedia.org/wiki/Pure_function). Główna zaletą *czystych funkcji* jest to, że dla tych samych argumentów zawsze zwracają ten sam wynik, podobnie jak ma to miejsce w matematyce.
+
+W Prologu porażka `fail` "cofa" wszystkie efekty kodu poza efektami ubocznymi. Z tego powodu używanie `fail` do realizacji pętli ma sens tylko wtedy, kiedy kod w pętli *posiada* efekty uboczne.
+</div>
+
+</div>

@@ -1,0 +1,154 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Laboratorium 2.2 Arytmetyka
+
+Aż do teraz, każda baza wiedzy, na której pracowaliśmy, składała się jedynie z predykatów, których argumentami były pewne stałe symboliczne. Tymczasem Prolog ma więcej rodzajów stałych, z czego najbardziej interesującą są *liczby* - niby nic, a jednak cieszy. Podczas dzisiejszego laboratorium nauczymy się operować liczbami, wykonywać podstawowe operacje arytmetyczne, definiować złożone operacje i wykorzystywać właściwości liczb w predykatach.
+</div>
+
+<div class="nb-cell markdown" name="md2">
+## Stałe liczbowe
+
+Zacznijmy od rzeczy najprostszej - liczby to stałe i *unifikują* się w taki sam sposób jak znane nam już stałe symboliczne:
+</div>
+
+<div class="nb-cell query" name="q1">
+X = 4.
+</div>
+
+<div class="nb-cell query" name="q2">
+suma(X,iloczyn(5,Y)) = suma(7,Z).
+</div>
+
+<div class="nb-cell query" name="q3">
+7 = 4.
+</div>
+
+<div class="nb-cell markdown" name="md3">
+Ważną właściwością liczb jest to, że są uporządkowane, a co za tym idzie, możemy je między sobą porównywać. Służą nam do tego operatory: `&lt;`, `=&lt;`, `=`, `&gt;=`, `&gt;`. Sądzę, że ich znaczenie powinno być jasne - jeśli nie, to zachęcam do eksperymentowania!
+</div>
+
+<div class="nb-cell query" name="q4">
+4 =&lt; 5.
+</div>
+
+<div class="nb-cell markdown" name="md4">
+Poniższy przykład pokazuje natomiast najczęstsze zastosowanie operatarów porównania. 'X &gt; 3' jest tak zwanym *strażnikiem*, który najzwyczajniej pozwala na wybranie, która z reguł ma się wykonać dla podanego argumentu.
+</div>
+
+<div class="nb-cell program" name="p1">
+test(X) :- X &gt; 3, write('Doprawdy, praca na medal!'), nl.
+test(X) :- X = 3, write('Rzutem na taśmę, ale zawsze.'), nl.
+test(X) :- X &lt; 3, write('Nie martw się, poprawki też są dla ludzi'), nl.
+</div>
+
+<div class="nb-cell query" name="q5">
+test(2).
+</div>
+
+<div class="nb-cell query" name="q6">
+test(4).
+</div>
+
+<div class="nb-cell markdown" name="md5">
+## Arytmetyka
+
+Z pewnością wszyscy czekamy już z niecierpliwością na główną zaletę liczb - otóż, jak sama nazwa wskazuje, służą one do liczenia. W Prologu zdefiniowane są wszystkie podstawowe operacje arytmetyczne, tj. `+`, `-`, `/`, `*`, czyli kolejno dodawanie, odejmowanie, mnożenie i dzielenie (jest ich dużo więcej, ale na razie tyle nam wystarczy). A teraz spróbujmy coś dodać:
+</div>
+
+<div class="nb-cell query" name="q7">
+X = 4 + 5.
+</div>
+
+<div class="nb-cell markdown" name="md6">
+Ups, coś się nie udało. Dla przypomnienia, `=` jest operatorem *unifikacji*, a sama unifikacja nie ma nic wspólnego z wykonaniem dodawania - dla niej `+` to tylko kolejny symbol. Ze względu na wykonywanie obliczeń w Prologu występuje operator `is` - różni się on od zwykłej unifikacji tym, że przed przeprowadzeniem unifikacji, najpierw ewaluuje *prawą stronę*.
+</div>
+
+<div class="nb-cell query" name="q8">
+X is 4 + 5.
+</div>
+
+<div class="nb-cell markdown" name="md7">
+"Oh, yeah!" - jak mawiali starożytni Brytowie. Udało się, powinszować. Teraz powinno pójść już z górki:
+</div>
+
+<div class="nb-cell query" name="q9">
+X is Y * 5 + 3.
+</div>
+
+<div class="nb-cell markdown" name="md8">
+Niestety, znowu porażka. Operator `is` nie zadziałał, ponieważ nie był wstanie ewaluować prawego wyrażanie ze zmienną `Y` pozbawioną wartości. Poniższa wersja jest znacznie lepsza:
+</div>
+
+<div class="nb-cell query" name="q10">
+Y = 4, X is Y * 5 + 3.
+</div>
+
+<div class="nb-cell markdown" name="md9">
+*Ostrzeżenie dla programistów:* w Prologu zmienne *nigdy* nie zmieniają wartości - nie można zatem zinkrementować zmiennej! Aby zwiększyć jakąś wartość o 1, zawsze musi zostać wprowadzona nowa zmienna. Proszę poprawdzić poniższe zapytanie tak, żeby nowa zmienna `X1` miała wartość o 1 większą niż `X`.
+</div>
+
+<div class="nb-cell query" name="q11">
+X = 5, X is X + 1.
+</div>
+
+<div class="nb-cell markdown" name="md10">
+Czasami zdarza się, że chcemy obliczyć obie strony równości, np:
+</div>
+
+<div class="nb-cell query" name="q12">
+6 + 3 is (9 - 5) * 9 / 4.
+</div>
+
+<div class="nb-cell markdown" name="md11">
+To też nie zadziała :( *is* nie ewaluuje lewej strony. Na szczęście zawsze można wprowadzić zmienną tymczasową:
+</div>
+
+<div class="nb-cell query" name="q13">
+Z is 6 + 3, Z is (9 - 5) * 9 / 4.
+</div>
+
+<div class="nb-cell markdown" name="md12">
+Jeżeli ktoś uważa takie dodatkowe zmienne za obmierzłe, może posłużyć się operatorem `=:=`, który ewaluuje obie strony.
+</div>
+
+<div class="nb-cell query" name="q14">
+6 + 3 =:= (9 - 5) * 9 / 4.
+</div>
+
+<div class="nb-cell markdown" name="md13">
+### Rekurencja z liczbami
+
+Wszyscy znamy już reguły rekurencyjne i wiemy z nich korzystać przy definiowaniu relacji o nieznanej złożoności. Teraz będziemy robić prostsze rzeczy: definiować operacje matematyczne, które wykonują nieznaną od początku liczbę mniejszych działań. Najprostszym przykładem może być potęgowanie:
+</div>
+
+<div class="nb-cell program" name="p2">
+% potęga(podstawia, wykładnik, wynik)
+% podniesienie do 0-wej potęgi zawsze zwraca 1 jako wynik
+potęga(_, 0, 1).
+% w innym wypadku jest to Podstawa * potęga o wykładniku o jeden mniejszym
+potęga(Podstawa, Wykładnik, Wynik) :-
+  Wykładnik &gt; 0,
+  MniejszyWykładnik is Wykładnik - 1,
+  potęga(Podstawa, MniejszyWykładnik, MniejszyWynik),
+  Wynik is MniejszyWynik * Podstawa.
+</div>
+
+<div class="nb-cell markdown" name="md14">
+Przypadkiem bazowym jest dla nas przypadek, gdy wykładnik jest zerowy - możemy się wtedy obyć bez rekurencji. Możemy teraz zaszaleć i spróbować policzyć jakąś potęgę:
+</div>
+
+<div class="nb-cell query" name="q15">
+potęga(4,5,Wynik).
+</div>
+
+<div class="nb-cell markdown" name="md15">
+---
+### Ćwiczenie
+
+  1. Proszę do powyższej bazy dopisać reguły realizujące operację silni zgodnie z jej definicją rekurencyjną z [wikipedii](https://pl.wikipedia.org/wiki/Silnia).
+
+---
+</div>
+
+</div>

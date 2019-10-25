@@ -1,0 +1,203 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Laboratorium 1.2 - Prolog jako język reguł
+
+Poprzednie laboratorium przedstawiało Prolog poprzez prezentację zapytań realizowanych przez ten system. Dzisiaj skupimy się na tym, czego się nie da wyrazić w zapytaniu, a stanowi o tym, co jest wyrażalne w naszym języku. Wprowadzone zostaną predykaty opisywane przez więcej niż jedną regułę, w szczególności zaś będziemy mówić o regułach [rekurencyjnych](https://pl.wikipedia.org/wiki/Rekurencja).
+</div>
+
+<div class="nb-cell markdown" name="md2">
+## Predykaty zdefiniowane przez reguły
+
+Kiedy pisałem w [poprzednim notatniku](https://swish.swi-prolog.org/p/pl_lab_1_1.swinb), że baza wiedzy składa się tylko z faktów, uprościłem trochę sprawę. W rzeczywistości baza wiedzy może zawierać również *reguły*, które opisują, pod jakimi warunkami zachodzi jakiś fakt. Poniższa baza wiedzy zawiera dwie, już wcześniej wymyślone przez nas, reguły bycia matką oraz bycia rodzeństwem:
+</div>
+
+<div class="nb-cell program" name="p1">
+jest_matką(X,Y) :- jest_rodzicem(X,Y), 
+                   jest_kobietą(X).
+
+jest_rodzeństwem(X,Y) :- jest_rodzicem(Z,X),
+                         jest_rodzicem(Z,Y), X \= Y.
+
+% jest_rodzicem(imię rodzica, imię dziecka)
+jest_rodzicem(kasia,robert).
+jest_rodzicem(kasia,michał).
+jest_rodzicem(tomek,robert).
+jest_rodzicem(tomek,eliza).
+jest_rodzicem(robert,miriam).
+
+% jest_mężem(imię męża, imię żony)
+jest_mężem(tomek, kasia).
+jest_mężem(michał, faustyna).
+
+% jest_kobietą(imię kobiety)
+jest_kobietą(kasia).
+jest_kobietą(eliza).
+jest_kobietą(faustyna).
+
+% jest_mężczyzną(imię mężczyzny)
+jest_mężczyzną(tomek).
+jest_mężczyzną(robert).
+jest_mężczyzną(michał).
+</div>
+
+<div class="nb-cell markdown" name="md3">
+W powyższej bazie wiedzy znajdują się dwie reguły: `jest_matką/2` i `jest_rodzeństwem/2`. Dla przypomnienia z logiki: predykat jest definiowany przez nazwę i liczbę argumentów - liczba po znaku `/` wskazuje na liczbę argumentów predykatu. Operator `:-` to nic innego jak zwykła implikacja idąca "od prawej do lewej". 
+
+W zasadzie owe reguły z punktu widzenia zapytań mają jedynie znaczenie pomocnicze. Zapytanie:
+</div>
+
+<div class="nb-cell query" name="q1">
+jest_matką(X,Y).
+</div>
+
+<div class="nb-cell markdown" name="md4">
+jest równoznaczne zapytaniu:
+</div>
+
+<div class="nb-cell query" name="q2">
+jest_rodzicem(X,Y), jest_kobietą(X).
+</div>
+
+<div class="nb-cell markdown" name="md5">
+Nie ma w tym nic dziwnego, powyższą operację można traktować jako zastąpienie predykatu przez jego definicję. W podobny sposób można byłoby zdefiniować wiele relacji, np. bycie stryjenką (siostrą ojca). Proszę dla ćwiczenia uzupełnić poniższe zapytanie tak, aby zwracało odpowiedź na pytanie "Kto jest czyją stryjenką?". W razie potrzeby proszę dodać brakujące predykaty do bazy (np. `jest_ojcem/2`, czy też `jest_siostrą/2`).
+</div>
+
+<div class="nb-cell query" name="q3">
+
+</div>
+
+<div class="nb-cell markdown" name="md6">
+Jeżeli się udało, proszę dodać do bazy wiedzy odpowiedni predykat `jest_stryjenką/2` tak, aby poniższe zapytanie zwracało te same wyniki:
+</div>
+
+<div class="nb-cell query" name="q4">
+jest_stryjenką(X,Y).
+</div>
+
+<div class="nb-cell markdown" name="md7">
+W języku polskim słowo _stryjenka_ występuje w jeszcze jednym znaczeniu jako _|żona brata ojca (stryja)|_. Proszę dopisać do bazy wiedzy predykat `jest_żoną/2` a następnie uzupełnić poniższe zapytanie tak, aby zwracało odpowiedź na pytanie: "Kto jest czyją stryjenką w drugim rozumieniu tego terminu?". Pomocne może być wprowadzenie predykatu `jest_stryjem/2`.
+</div>
+
+<div class="nb-cell query" name="q5">
+
+</div>
+
+<div class="nb-cell markdown" name="md8">
+Skoro nie sprawiło to żadnych trudności (mam nadzieję), teraz trzeba dopisać nową definicję do bazy wiedzy tak, by w bazie wiedzy znajdowały się dwie reguły opisujące ten sam predykat `jest_stryjenką/2`. 
+
+W tym momencie ponowne zadanie pytania:
+</div>
+
+<div class="nb-cell query" name="q6">
+jest_stryjenką(X,Y).
+</div>
+
+<div class="nb-cell markdown" name="md9">
+powinno zwrócić więcej wyników niż ostatnio. 
+
+  1. Proszę przyjrzeć się wynikom zapytania.
+  2. Odpowiedzieć sobie na pytanie, czy możliwe jest napisanie zapytania, które zwróciłoby takie same wyniki.
+  3. Proszę dopisać do bazy wiedzy kilka faktów o postaci `jest_stryjenką(imię, imię).` i ponownie zadać pytanie, kto jest stryjenką.
+  4. Ponownie przyjrzeć się wynikom.
+  5. Wyciągnąć wnioski.
+
+*Wniosek logiczny*: definicją predykatu w Prologu jest *logiczna alternatywa* wszystkich *reguł* i *faktów*, które opisują go w bazie wiedzym np. _|Stryjenka to siostra ojca|_ *lub* _|żona stryja|_ będzie w Prologu reprezentowana jako para reguł odpowiadających poszczególnym członom alternatywy.
+
+---
+
+#### Ćwiczenia: 
+
+Proszę dopisać do bazy wiedzy reguły definiujące relację bycia teściem (predykat `jest_teściem/2`), gdzie teść to _|ojciec żony|_ *lub* _|ojciec męża|_. 
+
+Poniżej znajduje się miejsce na testowanie zapytań:
+</div>
+
+<div class="nb-cell query" name="q7">
+
+</div>
+
+<div class="nb-cell markdown" name="md10">
+---
+</div>
+
+<div class="nb-cell markdown" name="md11">
+## Predykaty rekurencyjne
+
+Jak doskonale wiemy z życia oraz książek Marqueza, niektóre relacje rodzinne potrafią być bardziej skomplikowane od innych. W Prologu nie jest inaczej - dotychczas wszystkie opisywane przez nas relacje są opisane przez konkretny stopień pokrewieństwa, tj. potrzebna jest stała liczba przeskoków od osoby do konkretnie spokrewnionej osoby, np. między _ojcem_ i _dzieckiem_ jest jeden przeskok, między _stryjenką_ a konkretnym _dzieckiem_ natomiast dwa lub trzy przeskoki, zależnie od użytej definicji. Sytuacja robi się skomplikowana, gdy liczba przeskoków nie jest zdefiniowana; prostym przykładem jest relacja bycia _przodkiem_ - _przodkiem_ danej osoby jest jego _rodzic_, _|rodzic rodzica|_, _|rodzic rodzica rodzica|_, etc. 
+
+Obecnie jesteśmy w stanie zapisać odpowiednie zapytanie dla każdej z z poszczególnych relacji, np. bycie _prababcią_ _prawnuczka_ to "bycie _matką_ _rodzica_ _rodzica_ _prawnuczka_". Proszę uzupełnić poniższe zapytanie, by odpowiadało na pytanie ("Kto jest czyją _prababcią_?"), następnie zaś tradycyjnie już dopisać odpowiednią regułę do bazy wiedzy.
+</div>
+
+<div class="nb-cell query" name="q8">
+
+</div>
+
+<div class="nb-cell markdown" name="md12">
+Moglibyśmy próbować zdefiniować `jest_przodkiem/2` poprzez zbiór reguł, w stylu:
+
+==
+jest_przodkiem(X,Y) :- jest_rodzicem(X,Y).
+
+jest_przodkiem(X,Y) :- jest_rodzicem(X,Z), 
+                       jest_rodzicem(Z,Y).
+
+jest_przodkiem(X,Y) :- jest_rodzicem(X,Z1), 
+                       jest_rodzicem(Z1,Z2), 
+                       jest_rodzicem(Z2,Y).
+
+itd.
+==
+
+ale nie rokuje to dużych nadziei na sukces, o ile chcemy kiedyś skończyć te zajęcia, poza tym Prolog nie wspiera *nieskończonych* baz wiedzy. Pierwszym, kluczowym spostrzeżeniem, które może ułatwić nam zadanie, jest zwrócenie uwagi na jedną z logicznych właściwości naszej relacji - jest ona *przechodnia*, tj. jeżeli =X= jest przodkiem =Y=, a =Y= przodkiem =Z=, to =X= jest przodkiem =Z=. Pozwala nam ona stworzyć nową defnicję _bycia przodkiem_: "Ktoś jest naszym _przodkiem_ jeśli jest naszym _rodzicem_ *lub* jest _przodkiem_ naszego _rodzica_". Takie definicje nazywamy *rekurencyjnymi*, ponieważ definiowany predykat pojawia się rówież w treści definicji. Proszę dopisać do bazy wiedzy dwie następujące reguły:
+
+==
+jest_przodkiem(X,Y) :- jest_rodzicem(X,Y).
+
+jest_przodkiem(X,Y) :- jest_rodzicem(Z,Y),
+                       jest_przodkiem(X,Z).
+==
+
+i następnie wykonać poniższe zapytanie:
+</div>
+
+<div class="nb-cell query" name="q9">
+jest_przodkiem(X,Y).
+</div>
+
+<div class="nb-cell markdown" name="md13">
+Wynik powinien być satysfakcjonujący. Osiągnięcie tego samego zapytaniem byłoby niemożliwe, ponieważ zapytanie nie może odnosić się do samego siebie (zatem nie może być rekurencyjne).
+
+W ten sposób doszliśmy do głównej siły Prologa, która stawia go na równi z innymi językami (zarówno logicznymi jak i programistycznymi): *rekurencji*. Jednak, żeby rekurencja działała, należy zawsze pamiętać o pewnych zasadach jej używania.
+
+---
+
+#### PRZYKAZANIA REKURENCJI
+
+  1. zawsze zaczniesz definiować predykat rekurencyjny od reguły, która rekurencji nie zawiera (tzw. przypadku bazowego)
+  2. gdy w regule rekurencyjnej wywołasz tę regułę, zadbasz, by nowe wywołanie miało inne argumenty (bliższe przypadkowi bazowemu) 
+
+Przykazania te dwa zachowując, Twój predykat się nie zapętli i wynik zwróci.
+
+---
+
+*Ad 1.* W naszym przypadku przypadkiem bazowym jest bycie rodzicem.
+
+*Ad 2.* W naszym przypadku odległość od przypadku bazowego mierzymy liczbą przeskoków w drzewie genealogicznym. Należy zauwazyć, że =Z= występujące w regule znajduje się bliżej w drzewie względem potencjalnego przodka =X= niż poprzedni argument =Y=. Zatem z każdym wywołaniem reguły zbliżamy się do przypadku, gdy =X= będzie bezpośrednim rodzicem =Z= (przypadku bazowego), co zakończy wnioskowanie Prologa.
+
+---
+
+#### Ćwiczenia: 
+
+  1. Proszę dopisać do bazy predykat `jest_krewnym/2`, która definiuje relację pokrewieństwa opisaną w języku naturalnym słowami "Dwie osoby są krewnymi, o ile mają wspólnego przodka". Proszę zadać zapytanie szukające wszystkich krewnych i przejrzeć jego wszystkie wyniki. Czy jest w nich coś dziwnego?
+  2. Proszę dopisać do bazy rekurencyjny predykat `jest_potomkiem/2`.
+  3. Proszę dopisać do bazy wiedzy regułę definiującą relację bycia szwagrem (`jest_szwagrem/2`). Szwagra definiujemy jako _|męża siostry|_. Dodatkowo, relacja bycia szwagrem jest *symetryczna*, tj. jeżli =X= jest szwagrem =Y=, to =Y= jest szwagrem =X=.
+
+Poniżej znajduje się miejsce na testowanie zapytań:
+</div>
+
+<div class="nb-cell query" name="q10">
+
+</div>
+
+</div>
