@@ -1,0 +1,169 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Laboratorium 3.1 - Listy vs Map/Filter/Reduce
+
+Dotychczas świat opisywany w bazie wiedzy składał się z pojedynczych elementów połączonych relacjami - zazwyczaj jest to wystarczające, ale czasem jest też trochę niewygodne - niektóre relacje z natury występują tylko między zbiorami obiektów. Na pomoc przychodzą nam wtedy *listy*. Lista jest to uporządkowana kolekcja dowolnych termów i w najprostszym przypadku zapisuje się ją używając nawiasów kwadratowych, np. lista zawierająca stałe `a`, `b` i `c` będzię zapisana jako `[a,b,c]`. Pustą listę zapiszemy natomiast jako `[]`. Co do właściwości list, zacznijnmy od dobrych nowin - listy dają się unifikować!
+</div>
+
+<div class="nb-cell query" name="q1">
+[A,B,c] = [[], b, C].
+</div>
+
+<div class="nb-cell markdown" name="md2">
+O ile to wydaje się w miarę jasne, byłoby fajnie, gdybyśmy mogli dodawać do listy nowe elementy. Ponowne *ostrzeżenie*: w Prologu nic nie jest w stanie zmienic swojej wartości, w szczególności lista nie jest w stanie zmienić liczby swoich elementów. Zatem, żeby dodać albo usunąć nowy elelemnt, trzeba stworzyć nową listę. Mając tę prawdę z tyłu głowy, możemy uzupełnić naszą listę operatorów o operator *gilotyny* (nie jest to oficjalna nazwa) '|', który oddziela pierwszy element (głowę) listy od reszty jej elementów. Podobnie jak w przypadku prawdziwej gilotyny, stosuje się go w bardzo prosty sposób:
+</div>
+
+<div class="nb-cell query" name="q2">
+[H|T] = [a, b, c, d].
+</div>
+
+<div class="nb-cell markdown" name="md3">
+Term =H= przed `|` jest głową listy, zaś =T= jest listą zawierającą wszystkie pozostałe elementy. Przed `|` można umieścić więcej niż jeden element:
+</div>
+
+<div class="nb-cell query" name="q3">
+[H1,H2,H3|T] = [a, b, c, d].
+</div>
+
+<div class="nb-cell markdown" name="md4">
+W szczególnym przypadku mogą przed nim wystąpić wszystkie elementy listy - nawet wtedy =T= okaże się listą! Z punktu widzenia metafory gilotyny nie ma to jednak żadnego sensu, francuski rewolucjonista nigdy by tak nie zrobił.
+</div>
+
+<div class="nb-cell query" name="q4">
+[H1,H2,H3,H4|T] = [a, b, c, d].
+</div>
+
+<div class="nb-cell markdown" name="md5">
+Wynik jest inny, gdy liczba elementów przed gilotyną przekroczy liczbę elementów unifikowanej listy.
+</div>
+
+<div class="nb-cell query" name="q5">
+[H1,H2,H3,H4|T] = [a, b, c].
+</div>
+
+<div class="nb-cell markdown" name="md6">
+Wiedząc to wszystko, aby dodać element na początku listy, możemy użyć gilotyny bezpośrednio:
+</div>
+
+<div class="nb-cell query" name="q6">
+T = [b, c, d], L = [a|T].
+</div>
+
+<div class="nb-cell markdown" name="md7">
+Użycie operatora gilotyny pozwala nam unifikować listy o *nieznanej* długości, np. lista =|[H1, H2 | T]|= to lista, która zawiera co najmniej 2 elementy. W ten sposób możemy dowolnego wroga rewolucji skracać o głowę i inne części ciała bez żadnych ograniczeń.
+</div>
+
+<div class="nb-cell markdown" name="md8">
+### Listy w regułach
+
+Mając podstawową wiedzę o składni list, możemy pokusić się o napisanie reguły, która pobiera trzeci element z listy:
+</div>
+
+<div class="nb-cell program" name="p1">
+trzeci_element([_,_,Trzeci], Trzeci).
+</div>
+
+<div class="nb-cell markdown" name="md9">
+Teraz wystarczy wywołać tę regułę na przykładowej liście, by otrzymać jej trzeci element:
+</div>
+
+<div class="nb-cell query" name="q7">
+trzeci_element([a,b,c],T).
+</div>
+
+<div class="nb-cell markdown" name="md10">
+I jeszcze jeden przykład...
+</div>
+
+<div class="nb-cell query" name="q8">
+trzeci_element([1,2,3,4],T).
+</div>
+
+<div class="nb-cell markdown" name="md11">
+Cóż, znowu coś się nie udało. Ale to nie pomyłka, proszę zerknąć na pierwsze ćwiczenie:
+
+---
+#### Ćwiczenia
+
+  1. Dlaczego poprzednie zapytanie się nie powiodło? Proszę odpowiednio poprawić definicję predykatu `trzeci_element/2`.
+  2. Proszę spróbować zdefiniować rekurencyjny predykat `nty_element(Lista, N, Element)`, który pobiera n-ty element z listy. Podpowiedź: jeżeli `N = 1` jest jest równe 1, wynikiem jest głowa listy; jeżeli `N = 2`, wynikiem jest głowa ogona listy; jeżeli `N = 3`, to wynikiem jest głowa ogona ogona listy, etc. Proszę zrobić z tego rekurencję ;)
+  3. Proszę w poniższym zapytaniu przetestować działanie wbudowanych predykatów: `length(Lista, Liczba)`, `append(Lista1, Lista2, Lista3)`, `member(Element, Lista)`, `reverse(Lista1, Lista2)`, `nth1(Numer, Lista, Zmienna)`, `sort(Lista1, Lista2)`.
+</div>
+
+<div class="nb-cell query" name="q9">
+reverse([1, 2, 3, 4 ,5], Lista2).
+</div>
+
+<div class="nb-cell markdown" name="md12">
+### Podstawowe operacje na listach
+
+W programowaniu występują klasycznie trzy podstawowe rodzaje operacji na listach. W tej sekcji nauczymy się przetwarzania list z wykorzystaniem wbudowanych mechanizmów Prologa. Poniższa baza wiedzy zawiera predykaty, które przydadzą nam się podczas ćwiczeń.
+</div>
+
+<div class="nb-cell program" name="p2">
+filtruj(X) :- X &gt; 0.
+
+mapuj(X,Y) :- Y is X * 2.
+
+redukuj(X1, X2, Y) :- Y is X1 * X2.
+
+jedynka(_, 1).
+
+sumuj(X1, X2, Y) :- Y is X1 + X2.
+</div>
+
+<div class="nb-cell markdown" name="md13">
+#### Filtrowanie 
+
+Koncepcyjnie najprostsze, *filtrowanie* polega na wybraniu z listy `L1` elementów, które spełniają określony warunek. Wybrane elementy lądują w nowej liście (powiedzmy `L2`). Prolog posiada wbudowany predykat `include/3`, który jako argumenty przyjmuje kolejno:
+
+  1. Nazwę predykatu, który ma być prawdziwy dla elementów, które mają znaleźć się w `L2`.
+  2. Listę początkową `L1`.
+  3. Zmienną wynikową, która zostanie zunifikowana z listą `L2`.
+</div>
+
+<div class="nb-cell query" name="q10">
+include(filtruj, [1, -1, 3, -4, 5], Wynik).
+</div>
+
+<div class="nb-cell markdown" name="md14">
+Przykład, jak można zrealizować podobną operację rekurencyjnie bez wbudowanego predykatu, można znaleźć w [załączonym programie](https://swish.swi-prolog.org/?code=http://home.agh.edu.pl/~mslaz/prolog/pl_lab_3_1_filter.pl).
+
+#### Mapowanie
+
+*Mapowanie* polega na przetłumaczeniu elementów listy na nowe elementy tworzące listę wynikową. Na przykład, jeżeli chcemy wszystkie elementy listy pomnożyć przez dwa, możemy to zrobić mapując listę funkcją `X * 2`. Dla listy `[-1, 2, -3, 4]` wynikiem będzie lista `[-2, 4, -6, 8]`. W Prologu istnieją wbudowany predykat `maplist/3`, który jako argumenty przyjmuje kolejno:
+
+  1. Nazwę predykatu dwuargumentowego `P/2`.
+  2. Listę `L1`
+  3. Listę `L2`, która zawiera elementy `E2`, takie, że dla elementu `E1` z `L1` zachodzi `P(E1,E2)`.
+</div>
+
+<div class="nb-cell query" name="q11">
+maplist(mapuj, [1, -1, 3, -4, 5], Wynik).
+</div>
+
+<div class="nb-cell markdown" name="md15">
+Przykład, jak można zrealizować podobną operację rekurencyjnie bez wbudowanego predykatu, można znaleźć w [załączonym programie](https://swish.swi-prolog.org/?code=http://home.agh.edu.pl/~mslaz/prolog/pl_lab_3_1_map.pl).
+
+#### Redukcja
+
+*Redukcja* to zastąpienie listy przez pojedynczy term powstały jako wykonanie binarnej funkcji na kolejnych parach elementów listy. Brzmi to trochę strasznie, ale rzecz jest całkiem prosta. Dla przykładu chcemy otrzymać sumę wszystkich elementów listy `[-1, 1, -2, 3, 0]`, po naszemu `-1 + 1 + -2 + 3 + 0`, co jest równoważne `((((-1 + 1) + -2) + 3) + 0`. Redukcja polega *dokładnie na tym*, bierzemy kolejne pary elementów, najpierw `-1` i `1`, dodajemy je i otrzymujemy `0`. Następnie `0` dodajemy do trzeciego elementu listy `-2`, otrzymując w wyniku `-2`, potem ten wynik dodajemy do czwartego elementu, etc. W Prologu istnieje wbudowany predykat `foldl/4`, którego argumenty znaczą kolejno:
+
+  1. Nazwę predykatu, który przymuje trzy argumenty -&gt; dwa pierwsze są wejściowe, trzeci zaś to wynik zastosowania predykatu.
+  2. Listę, którą redukujemy.
+  3. Wartość początkową -&gt; początkowa wartość, która będzie używana podczas wyliczania wartości dla pierwszego elementem listy. Jeżeli chcemy mieć zwykłą sumę listy, powinna mieć wartość 0, jeżeli iloczyn elementów listy, 1 wydaje się być rozsądnym wyborem.
+  4. Zmienną wynikową.
+</div>
+
+<div class="nb-cell query" name="q12">
+foldl(redukuj, [1, -1, 3, -4, 5], 1, Wynik).
+</div>
+
+<div class="nb-cell markdown" name="md16">
+Proszę spróbować zmienić wartość 3 argumentu tego wywołania i sprawdzić, jaki ma ona wpływ na końcowy wynik.
+
+Przykład, jak można zrealizować podobną operację rekurencyjnie bez wbudowanego predykatu, można znaleźć w [załączonym programie](https://swish.swi-prolog.org/?code=http://home.agh.edu.pl/~mslaz/prolog/pl_lab_3_1_reduce.pl).
+</div>
+
+</div>

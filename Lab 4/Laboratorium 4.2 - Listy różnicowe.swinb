@@ -1,0 +1,64 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Laboratorium 4.2 - Listy różnicowe
+</div>
+
+<div class="nb-cell markdown" name="md4">
+Lista różnicowa (ang. _difference list_) to struktura danych, która powstała w jednym szczególnym celu: żeby było dodawać elementy na *koniec* listy. Sama idea jest bardzo prosta i w języku `C` sprowadza się do tego, żeby posiadać w osobnej zmiennej _wskaźnik_ na ostatni element listy. Potem można tego wskaźnika użyć, zeby dodać coś końcu listy. W Prologu nie ma wskaźników, ale funkcję wskaźnika może pełnić zmienna. 
+
+Sama nazwa "lista różnicowa" pochodzi od reprezentowania listy jako różnicy dwóch list, np. lista `[a,b,c]` może być równoważnie przez wszystkie poniższe pary list:
+
+- ``[a,b,c,d,e],[d,e]``
+- `[a,b,c,d,e,f],[d,e,f]`
+- `[a,b,c],[]`
+- `[a,b,c|[d,e,f,g]],[d,e,f,g]`
+- `[a,b,c|[]],[]`
+- `[a,b,c|End],End`
+</div>
+
+<div class="nb-cell markdown" name="md8">
+Z tych wszystkich postaci ostatnia jest najogólniejsza i to właśnie na tej postaci będziemy się opierać. Zmienna ``End`` działa jako wspomniany wskaźnik na koniec listy. Jeżeli zunifikujemy ją z inną listą, np. `End = [d,e]`, to magicznie pierwsza lista stanie się listą `[a,b,c,d,e]`.
+</div>
+
+<div class="nb-cell query" name="q2">
+Lista = [a,b,c|End], End = [d,e]
+</div>
+
+<div class="nb-cell markdown" name="md5">
+W ten sposób jednak ``Lista`` przestała być listą różnicową. Docelowo, *każda* lista różnicowa składa się z listy i swojego wskaźnika:
+</div>
+
+<div class="nb-cell query" name="q3">
+Lista = [a,c,d|End1], End1 = [d,e|End2]
+</div>
+
+<div class="nb-cell markdown" name="md6">
+W ten sposób cały czas możemy dodawać elementy przez manipulowanie ``End2``. Żeby zamienić listę różnicową w zwykłą listę, wystarczy zunifikować jej wskaźnik na ostatni element z pustą listą:
+</div>
+
+<div class="nb-cell query" name="q4">
+Lista = [a,b,c|End], End = []
+</div>
+
+<div class="nb-cell markdown" name="md7">
+*Do utrwalenia:* listę różnicową zawsze reprezentują dwa elementy - lista oraz zmienna będąca jej ogonem. Mając to w głowie możemy napisać i zrozumieć dodawanie list różnicowych:
+</div>
+
+<div class="nb-cell program" name="p1">
+dodaj_różnicowo(L1-E1,E1-E2,L1-E2).
+</div>
+
+<div class="nb-cell markdown" name="md9">
+W powyższym kodzie operator ``-`` służy do połączenia w parę dwóch elementów listy różnicowej. Dodawanie można przetestować poniżej:
+</div>
+
+<div class="nb-cell query" name="q1">
+dodaj_różnicowo([a,b,c|E1]-E1, [d,e|E2]-E2, Wynik)
+</div>
+
+<div class="nb-cell markdown" name="md10">
+*Zadanie:* zrozum to, człowieku :)
+</div>
+
+</div>

@@ -1,0 +1,313 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Laboratorium 4.1 - Listy - kolejne starcie
+</div>
+
+<div class="nb-cell markdown" name="md2">
+Kontynuujemy temat z zeszłego tygodnia - listy. Tym razem skupimy się na bardziej zaawansowanych operacjach, wykorzystujących mechanizmy Prologa.
+
+Poniżej, dla przypomnienia, znajdują się predykaty liczące długość listy oraz dodające do siebie dwie listy.
+</div>
+
+<div class="nb-cell program" name="p1">
+dlugosc([], 0).
+dlugosc([_|T], L) :-
+    dlugosc(T, PL),
+    L is PL + 1.
+
+dodaj_listy([], L2, L2).
+dodaj_listy([H|L1], L2, [H|L3]) :-
+    dodaj_listy(L1, L2, L3).
+</div>
+
+<div class="nb-cell markdown" name="md3">
+W Prologu oba te predykaty są wbudowane, pierwszy z nich to _length/2_, drugi zaś _append/3_. Można łatwo to sprawdzić, używając predykatu _listing/1_.
+</div>
+
+<div class="nb-cell query" name="q1">
+listing(lists:append/3)
+</div>
+
+<div class="nb-cell markdown" name="md4">
+Odważni mogą sprawdzić jak wygląda kod źródłowy `length/2`, ale nie polecam, implementacja jest inna od naszej - w szczególności rzuca wyjątki przy złych argumentach.
+</div>
+
+<div class="nb-cell markdown" name="md5">
+## Odwracalne obliczenia
+</div>
+
+<div class="nb-cell markdown" name="md6">
+Jedną z największych zalet Prologa względem innych języków jest naturalna tendencja predykatów do bycia odwracalnymi, w tym sensie, że wejście i wyjście predykatu są zamienne. W ten sposób w liczbach Peano możliwe było zdefiniowanie odejmowania przez predykat dodawania. Z listami jest podobnie, więc skoro:
+</div>
+
+<div class="nb-cell query" name="q2">
+length([a,b,c], N)
+</div>
+
+<div class="nb-cell markdown" name="md7">
+to:
+</div>
+
+<div class="nb-cell query" name="q3">
+length(L, 3)
+</div>
+
+<div class="nb-cell markdown" name="md8">
+Jest to standardowy sposób, by stworzyć listę nowych zmiennych o zadanej długości. 
+
+Można pójść nawet dalej:
+</div>
+
+<div class="nb-cell query" name="q4">
+length(L, N)
+</div>
+
+<div class="nb-cell markdown" name="md9">
+Proszę prześledzić wynik, ale powyższa konstrukcja wydaje się już mniej użyteczna ;)
+</div>
+
+<div class="nb-cell markdown" name="md10">
+### Usuwanie przez dokładanie
+</div>
+
+<div class="nb-cell markdown" name="md11">
+Dotychczas potrafiliśmy dodawać elementy tylko z przodu listy. Analagicznie wygląda usuwanie - proszę spojrzeć poniżej jak usunąć dwa elementy:
+</div>
+
+<div class="nb-cell query" name="q5">
+Lista = [a,b,c], [_,_|MniejszaLista] = Lista
+</div>
+
+<div class="nb-cell markdown" name="md12">
+Mając do dyspozycji predykat `append/3` możemy zrobić to samo:
+</div>
+
+<div class="nb-cell query" name="q6">
+Lista = [a,b,c], append([_,_],MniejszaLista,Lista)
+</div>
+
+<div class="nb-cell markdown" name="md13">
+Ale możemy też to zrobić "od tyłu":
+</div>
+
+<div class="nb-cell query" name="q7">
+Lista = [a,b,c], append(MniejszaLista,[_,_],Lista)
+</div>
+
+<div class="nb-cell markdown" name="md14">
+Ponownie, możemy pójść krok dalej:
+</div>
+
+<div class="nb-cell query" name="q8">
+Lista = [a,b,c], append(L1,L2,Lista)
+</div>
+
+<div class="nb-cell markdown" name="md15">
+Albo w ogóle, pójść na całość:
+</div>
+
+<div class="nb-cell query" name="q9">
+append(L1,L2,L3)
+</div>
+
+<div class="nb-cell markdown" name="md16">
+Jednak powyższe konstrukcje wydają się już mniej użyteczne
+</div>
+
+<div class="nb-cell markdown" name="md17">
+## Wzorce tworzenia rekurencji na listach
+</div>
+
+<div class="nb-cell markdown" name="md18">
+Istnieje kilka klasycznych sposobów przetwarzania list, które należy sobie przyswoić, odpowiadają one z grubsza operacjom map/filter/list z poprzednich zajęć.
+
+#### Map
+
+Mapowanie jest najprostszym rodzajem rekurencyjnej operacji, potrzebujemy tylko dwóch klauzul:
+1. przypadku dla pustej listy, który się sprowadza do jej 'przepisania' na wyjście
+2. przypadku dla niepustej listy, która tłumaczy element na nowy element i 'przekłada' go do nowej listy
+</div>
+
+<div class="nb-cell program" name="p2">
+% 1. pusta lista
+map([], []).
+% 2. przekładanie głowy list
+map([H1|T1], [H2|T2]) :-
+    translate(H1,H2),
+    map(T1, T2).
+
+translate(UpperCase, LowerCase) :- 
+    string_lower(UpperCase, LowerCase).
+</div>
+
+<div class="nb-cell markdown" name="md19">
+Powyższy przykład tłumaczy wielkie litery na ich małe odpowiedniki. _string_lower/2_ jest wbudowanym predykatem Prologa.
+</div>
+
+<div class="nb-cell query" name="q10">
+map(['P','r','o','L','o','g'], X).
+</div>
+
+<div class="nb-cell markdown" name="md20">
+Na marginesie: podwójny cudzysłów w SWI-Prolog to _string_, który *nie* jest listą. Starsze kursy Prologa słusznie będą uczyły, że _string_ to lista znaków, ale w nowym SWI-Prolog nie jest to już prawdą, więcej o tym w [dokumentacji](https://www.swi-prolog.org/pldoc/man?section=strings]). W dużym skrócie, jeżeli chcemy mieć listę znaków, to używamy nawiasów typu "backtick", niżej przykład:
+</div>
+
+<div class="nb-cell query" name="q11">
+length(`prolog`, X).
+</div>
+
+<div class="nb-cell markdown" name="md21">
+### Filter
+</div>
+
+<div class="nb-cell markdown" name="md22">
+Operacja prostsza, ale wymagająca więcej klauzuj niż _map_. Potrzebne są trzy klauzuje:
+1. przypadek dla pustej listy (taki sam jak w _map_)
+2. przypadek dla głowy listy, która spełnia warunki filtrowania - taki element przekładamy do listy wynikowej
+3. przypadek dla głowy listy, która nie spełnia warunku filtrowania, taki element ignorujemy
+</div>
+
+<div class="nb-cell program" name="p3">
+% 1. w pustej liście nia ma co filtrować
+filter([], []).
+% 2. element spełnia warunek, przekładamy go
+filter([H|T1], [H|T2]) :-
+    satisfies_condition(H),
+    filter(T1,T2).
+% 3. element nie spełnia warunku, ignorujemy go
+filter([H|T1], T2) :-
+    \+ satisfies_condition(H),
+    filter(T1,T2).
+
+% Element spełnia warunek, jeśli jest 
+% zmienną bez przypisanej wartości
+% var/1 to wbudowany predykat
+satisfies_condition(X) :- var(X).
+</div>
+
+<div class="nb-cell markdown" name="md24">
+Poniżej przykładowe wywołanie naszego filtrowania:
+</div>
+
+<div class="nb-cell query" name="q13">
+filter([A,1,B,d,c],X).
+</div>
+
+<div class="nb-cell markdown" name="md23">
+Na marginesie, poza _var/1_ istnieją też wbudowane predykat _number/1_ (sprawdza, czy coś jest liczbą), _atom/1_ (sprawdza czy coś jest atomem, inaczej identyfikatorem), _string/1_ (można się domyślić) i `is_list/1`, który sprawdza, czy coś jest listą.
+</div>
+
+<div class="nb-cell markdown" name="md25">
+### Reduce
+</div>
+
+<div class="nb-cell markdown" name="md26">
+Najbardziej skomplikowany z tych trzech schematów, ponieważ wymaga dołożenia dodatkowego argumentu zwanego akumulatorem (_accumulator_, lub _acc_), który przechowuje dotychczasowe wyniki. Potrzebne są trzy klauzule:
+1. przyjmująca trzy argumenty klauzula dla listy pustej - przepisuje wartość akumulatora na wyjście
+2. przyjmująca trzy argumenty klauzula dla listy niepustej - aktualizuje akumulator na podstawie aktualnej głowy listy i przekazuje nową wartość dalej
+3. przyjmująca dwa argumenty klauzula, która pełni rolę fasady i wywołuje swoją trój-argumentową wersję z początkową wartością akumulatora
+</div>
+
+<div class="nb-cell markdown" name="md27">
+Poniżej znajdują się dwa proste przykłady (sumowanie i odwracanie listy) używające tego wzorca rekursji:
+</div>
+
+<div class="nb-cell program" name="p4">
+% 1. przepisujemy akumulator dla pustej listy
+sumuj([], Acc, Acc).
+% 2. aktualizujemy akumulator, dodając nowe elementy
+% i przekazujemy go dalej
+sumuj([H|T], Acc, Result) :-
+    NewAcc is H + Acc,
+    sumuj(T, NewAcc, Result).
+% 3. fasada ukrywająca akumulator
+sumuj(List, Result) :-
+    sumuj(List, 0, Result).
+
+odwróć([], Acc, Acc).
+% Każdy element dodawany jest na początek akumulatora
+% w kolejności od lewej do prawej.
+% W efekcie ostatni element wyląduje na początku akumulatora
+odwróć([H|T], Acc, Result) :-
+    NewAcc = [H|Acc],
+    odwróć(T, NewAcc, Result).
+odwróć(List, Result) :-
+    odwróć(List, [], Result).
+</div>
+
+<div class="nb-cell markdown" name="md28">
+Klasycznie, przykładowe zapytania, żeby przetestować działanie:
+</div>
+
+<div class="nb-cell query" name="q14">
+sumuj([1,2,3],X)
+</div>
+
+<div class="nb-cell query" name="q12">
+odwróć([1,2,3],X).
+</div>
+
+<div class="nb-cell markdown" name="md29">
+Na marginesie: _odwróć/2_ jest w stanie odwracać listy podane za równo jako pierwszy jak i drugi argument. _sumuj/2_ już nie jest odwracalny (warto sprawdzić). Wynika to z tego, że zwykła arytmetyka używająca `is` jest z natura kierunkowa i nieodwracalna.
+</div>
+
+<div class="nb-cell markdown" name="md30">
+### Inne
+</div>
+
+<div class="nb-cell markdown" name="md31">
+Oczywiście powyższe wzorce nie wyczerpują wszystkich możliwości. Prostym przykładem może być sprawdzanie zawartości liczby. Poprzednie wzorce zawsze zwracały jakieś wyniki - co jeżeli chcemy jedynie sprawdzić jakąś właściwość listy? Jeżeli warunek da się sprawdzić analizując pojedyncze elementy, sytuacja jest w miarę prosta:
+1. jeżeli warunek jest spełniony dla pustej listy, dajemy stosowną klauzulę
+2. definiujemy, czy warunek jest spełniony dla głowy listy 
+  1. jeżeli jest spełniony, kończymy
+  2. w innym wypadku, sprawdzamy warunek dla jej ogona
+</div>
+
+<div class="nb-cell program" name="p5">
+% predykat sprawdzający, czy coś jest elementem listy
+% 1. nic nie jest elementem pustej listy, więc 
+%    nie dodajemy żadnej klauzulu. W zasadzie moglibyśmy napisać
+%    jestem_element(_, []) :- false.
+%    ale jest to zbędne
+
+% 2. jeżeli warunek jest spełniony, kończymy
+%    El jest głową listy, więc jest jej elementem.
+jest_elementem(El, [El|_]).
+
+% 3. jeżeli warunek jest spełniony, patrzymy co, z ogonem
+jest_elementem(El, [H|T]) :-
+    El \= H,
+    jest_elementem(El, T).
+</div>
+
+<div class="nb-cell markdown" name="md32">
+Teraz test!
+</div>
+
+<div class="nb-cell query" name="q15">
+jest_elementem(a, [l,a,b,o,r,a,t,o,r,i,u,m]).
+</div>
+
+<div class="nb-cell markdown" name="md33">
+Na marginesie: powyższa definicja jest poprawna dla _zbiorów_, ale w przypadku _list_ ma ograniczoną użyteczność. Wbudowana funkcja _member/2_ działa tak samo, ma jednak usuniętą linijkę ``13: El 
+\= H,`` z powyższego kodu. Różnica ta jest kluczowa, kiedy porównamy dwa zapytania:
+</div>
+
+<div class="nb-cell query" name="q16">
+jest_elementem(X, [l,a,b,o,r,a,t,o,r,i,u,m]).
+</div>
+
+<div class="nb-cell query" name="q17">
+member(X, [l,a,b,o,r,a,t,o,r,i,u,m]).
+</div>
+
+<div class="nb-cell markdown" name="md34">
+Jeżeli różnica nie jest jasna, napiszę ją wprost: definicja _member/2_ pozwala iterować po elementach listy!
+</div>
+
+<div class="nb-cell query" name="q18">
+forall(member(X, [t,h,a,t,"'",s," ", a, l, l," ",f,o,l,k,s]), write(X))
+</div>
+
+</div>

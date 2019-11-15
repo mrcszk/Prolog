@@ -1,0 +1,212 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Lab 3.2 - Zapytania agregacyjne/pętle
+
+Dzisiejsze laboratorium powróci do korzeni - do traktowania Prologa jako języka opisywania baz wiedzy i ich odpytywania. Wyuczona na poprzednich laboratoriach wiedza posłuży nam do budowania bardziej złożunych zapytań i predykatów. Ponownie będziemy definiować bazę wiedzy o rodzinie, tym razem w sposób bardziej rozbudowany.
+
+Zanim jednak do tego przejdziemy, poruszymy jeszcze jeden ostatni temat - *zapytania agregacyjne*.
+</div>
+
+<div class="nb-cell markdown" name="md2">
+## Zapytania agregacyjne 
+
+Dotychczas każde zapytanie dotyczyło pojedynczego obiektu - czy dany obiekt jest w danej relacji? Czy istnieje obiekt, który spełnia dany predykat? Kiedy chcieliśmy zapytać o większą liczbę obiektów, np. "Które obiekty spełniają daną relację?", musieliśmy posługiwać się przyciskiem `next`, ewentualnie robić pętlę, korzystając z `write` i `fail`. Oba te podejścia nie pozwalają jednak na przetwarzanie wszystkich takich obiektów naraz - zawsze mamy do czyenienia tylko z jednym w danej chwili. Dlatego też w Prologu zostały wprowadzone, tzw. zapytania agregacyjne, których wynikiem jest lista obiektów spełniających dane zapytanie.
+
+Przykładem może być poniższa baza najwyższych budynków w Polsce.
+</div>
+
+<div class="nb-cell program" data-background="true" name="p1">
+% budynek(Nazwa, Miasto, Wysokość, Rok Budowy).
+budynek('Pałac Kultury i Nauki', 'Warszawa', 237, 1955).
+budynek('Warsaw Spire', 'Warszawa', 220, 2015).
+budynek('Sky Tower', 'Wrocław', 212, 2012).
+budynek('Warsaw Trade Tower', 'Warszawa', 208, 1999).
+budynek('Złota 44', 'Warszawa', 192, 2013).
+budynek('Rondo 1', 'Warszawa', 192, 2006).
+budynek('Hotel Marriott', 'Warszawa', 170, 1989).
+budynek('Warsaw Financial Center', 'Warszawa', 165, 1998).
+budynek('InterContinental Warsaw', 'Warszawa', 164, 2004).
+budynek('Cosmopolitan Twarda 2/4', 'Warszawa', 160, 2013).
+
+
+sumuj(X1, X2, R) :- R is X1 + X2.
+średnia(Lista, Średnia) :- foldl(sumuj, Lista, 0, Suma), length(Lista, Długość), Średnia is Suma / Długość.
+</div>
+
+<div class="nb-cell markdown" name="md3">
+Teraz chcielibyśmy na przykład poznać średnią wysokość budynków zbudowanych w dwudziestym pierwszym stuleciu. Jak to zrobić? Na pomoc przychodzi specjalny predykat `findall/3`.
+</div>
+
+<div class="nb-cell query" name="q1">
+findall(Wysokość, (budynek(_,_, Wysokość, Rok), Rok &gt; 2000), Budynki), średnia(Budynki, Średnia).
+</div>
+
+<div class="nb-cell markdown" name="md4">
+Działanie zapytania w zasadzie jest bardzo proste:
+
+  1. Pierwszy argument `findall` mówi, z czego ma składać się interesująca nas lista.
+  2. Drugi argument `findall` to zapytanie, w którym pytamy o pojedyczny element listy. Może zawierać *więcej* niż jeden atom, ale wtedy musi być otoczone dodatkowym nawiasem.
+  3. Trzeci argument to zmienna, którą wskazuję na listę wszystkich elementów spełniających zapytanie.
+  4. Obliczenie średniej to już tylko powtórka z zajęć o listach.
+
+Odrobinę bardziej skomplikowanym predykatem jest predykat `bagof/3`. Proszę porównać dwa poniższe zapytania:
+</div>
+
+<div class="nb-cell query" name="q2">
+findall(Miasto, budynek(_, Miasto, _, _), Miasta).
+</div>
+
+<div class="nb-cell query" name="q3">
+bagof(Miasto, budynek(_, Miasto, _, _), Miasta).
+</div>
+
+<div class="nb-cell markdown" name="md5">
+Jeżeli różnica jest niejasna, proszę w bazie wiedzy skopiować dowolną pozycję, np. tak, żeby najpiękniejszy budynek Warszawy pojawiał się w niej dwukrotnie. Następnie proszę potwórzyć zapytanie `bagof`.
+</div>
+
+<div class="nb-cell query" name="q4">
+bagof(Miasto, budynek(_, Miasto, _, _), Miasta).
+</div>
+
+<div class="nb-cell markdown" name="md6">
+Tym razem jedna z list zawiera dwukrotnie miasto 'Warszawa', interesujące. Najwyraźniej `bagof` znajduje listy obiektów, dla których zapytania zwracają *dokładnie* to samo, z wyjątkiem zmiennej, która ma wylądować w liście wynikowej. Jest to trochę mało użyteczne, dlatego też istnieje konstrukcja, która pozwala ignorować nieinteresujące nas zmienne w zapytaniu:
+</div>
+
+<div class="nb-cell query" name="q5">
+bagof(Miasto, (A, B, C)^budynek(A, Miasto, B, C), Miasta).
+</div>
+
+<div class="nb-cell markdown" name="md7">
+Zmienne występujące w nawiasach przed daszkiem `^` mówią, żeby `bagof` ignorował różnice wartości tych zmiennych pomiędzy poszczególnymi wynikami zapytania. Tym razem `bagof` zadziałało dokładnie jak `findall`, ponieważ zignorowało różnice we wszystkich zmiennych występujących w zapytaniu (dokładnie to robi `findall`). 
+
+Może wydawać się to nieużyteczne, ale pozwala nam lepiej kontrolować zapytania. Gdybyśmy na przykład chceli mieć listy nazw budynków w różnych miastach, moglibyśmy zadać zapytanie:
+</div>
+
+<div class="nb-cell query" name="q6">
+bagof(Nazwa, (A, B)^budynek(Nazwa, Miasto, A, B), Nazwy).
+</div>
+
+<div class="nb-cell markdown" name="md8">
+Dzięki temu, że nie ignorujemy zmiennej `Miasto`, `bagof` pogrupuje wyniki ze względu na miasto. Całkiem sprytne.
+</div>
+
+<div class="nb-cell markdown" name="md9">
+### Ćwiczenia
+
+  1. Proszę przetestować zapytanie agregacyjne `setof`. Czym różni się ono od swojego kuzyna `bagof`?
+</div>
+
+<div class="nb-cell query" name="q7">
+
+</div>
+
+<div class="nb-cell markdown" name="md10">
+## Pętle
+
+Dotychczas używaliśmy jedynie ubogich (_poor man's_, jakby powiedział anglosas) zamienników pętli, opartych o konstrukcję `fail`. W Prologu istnieją dwa wbudowane rodzaje pętli: `foreach` i `forall`, z pozoru zachowujące się tak samo.
+
+Poniżej znajduje się przykład zapytania wypisującego wszystkie budynki w bazie oparty o `fail`.
+
+Z nowości należy zauważyć predykat `format/2`, który działa jak `printf` znany z C. Jako pierwszy argument przyjmuje format napisu, jako drugi listę elementów, którymi zastąpione zostaną znaczniki z tyldą `~`. Więcej o formatowaniu do przeczytania w [dokumentacji](https://www.swi-prolog.org/pldoc/man?predicate=format/2).
+</div>
+
+<div class="nb-cell query" name="q8">
+budynek(Nazwa, Miasto, Wysokość, RokBudowy), format('nazwa: ~w, położenie: ~w, wysokość: ~w, rok budowy: ~w\n', [Nazwa, Miasto, Wysokość, RokBudowy]), fail.
+</div>
+
+<div class="nb-cell markdown" name="md11">
+Alternatywne podejście bez użycia `fail`, do zastosowanie `findall` i `maplist`:
+</div>
+
+<div class="nb-cell program" name="p2">
+wypisz(X,X) :- 
+    X = budynek(Nazwa, Miasto, Wysokość, RokBudowy),
+    format('nazwa: ~w, położenie: ~w, wysokość: ~w, rok budowy: ~w\n', [Nazwa, Miasto, Wysokość, RokBudowy]).
+</div>
+
+<div class="nb-cell query" name="q9">
+findall(budynek(Nazwa, Miasto, Wysokość, RokBudowy), 
+        budynek(Nazwa, Miasto, Wysokość, RokBudowy),
+        Budynki),
+maplist(wypisz, Budynki, _).
+</div>
+
+<div class="nb-cell markdown" name="md12">
+O ile takie podejście wydaje się nawet działać, jest trochę niewygodne. Musimy dodać dwuargumentowy predykat `wypisz`, który udaje przetwarzanie elementu listy. Do tego zawsze musimy wcześniej stworzyć listę elementów przy użyciu zapytania agregacyjnego - a nie zawsze taka lista jest nam potrzebna.
+Na pomoc przychodzą pętle!
+
+Proszę porównać dwa poniższe zapytania:
+</div>
+
+<div class="nb-cell query" name="q10">
+foreach(
+	budynek(Nazwa, Miasto, Wysokość, RokBudowy), 
+    format('nazwa: ~w, położenie: ~w, wysokość: ~w, rok budowy: ~w\n', [Nazwa, Miasto, Wysokość, RokBudowy])
+)
+</div>
+
+<div class="nb-cell query" name="q11">
+forall(
+	budynek(Nazwa, Miasto, Wysokość, RokBudowy), 
+    format('nazwa: ~w, położenie: ~w, wysokość: ~w, rok budowy: ~w\n', [Nazwa, Miasto, Wysokość, RokBudowy])
+)
+</div>
+
+<div class="nb-cell markdown" name="md13">
+Oba rodzaje pętli przyjmują dwa argumenty:
+1. `Warunek` (Cond): zapytanie, po którego wynikach będziemy iterować
+2. `Akcja` (Action): Zapytanie, które zostanie wykonane dla każdego wyniku
+</div>
+
+<div class="nb-cell markdown" name="md14">
+### `forall` vs `foreach` - na czym polega różnica
+</div>
+
+<div class="nb-cell markdown" name="md17">
+Proszę przyjrzeć się poniższemu zapytaniu:
+</div>
+
+<div class="nb-cell query" name="q12">
+length(Lista, 5),
+format('Przed pętlą: ~w\n', [Lista]),
+foreach(between(1, 5, I), (
+	nth1(I, Lista, I) 
+)),
+format('Po pętli: ~w\n', [Lista]).
+</div>
+
+<div class="nb-cell markdown" name="md18">
+Znając już działanie list, zapytanie powinno być w miarę zrozumiałe:
+- `length(Lista, 5)` tworzy listę zawierającą 5 elementów. Domyślnie to są unikatowe zmienne. Równoznaczne z `Lista = [_, _, _, _, _]`
+- `format('Przed pętlą: ~w\n', [Lista])` wypisuje listę przed wykonaniem pętli
+- `between(1, 5, I)` to mała nowość. `between/3` działa jak `range` w Pythonie, gdzie pierwszy i drugi argument to lewy i prawy koniec zakresu liczb
+- `nth1(I, Lista, I)` unifikuje `I`-ty element `Listy` z jego indeksem
+- `format('Po pętli: ~w\n', [Lista]).` wypisuje listę po wykonaniu pętli
+
+#### Ćwiczenie
+
+Podstaw `forall` na miejscu `foreach` i sprawdź jak się zmienił wynik
+
+-----
+</div>
+
+<div class="nb-cell markdown" name="md15">
+Na tym etapie można się zastanowić czym się te dwie pętle różnią. Jeżeli najedziemy myszką na ich nazwy w zapytaniach, dostaniemy podpowiedzi:
+- _foreach/2: (autoload from aggregate): True if conjuction of results is true._ 
+- _forall/2: - For all alternative bindings of Cond, Action can be proven._
+</div>
+
+<div class="nb-cell markdown" name="md16">
+Z języka dokumentacji na nasze: `foreach/2` tworzy wielkie zapytanie składające się z koniunkcji wszystkich akcji. W praktyce można powiedzieć, że działa to tak jak podejście `findall` + `maplist`.
+
+`forall/2` natomiast sprawdza akcję dla każdego wyniku osobno. W praktyce oznacza to, że `forall/2` zachowuje się pętla oparta o `fail`.
+
+Zaletą `forall` jest jego lekkość - nigdy nie tworzy żadnej listy, działa szybko i przyjemnie. Wadą natomiast jest to, że jeżeli `Akcja` ma jakieś efekty uboczne, to po każdym `failu` te efekty będą cofane. `forall/2` nie używa `faila`, więc tutaj tego problemu nie ma, jest natomiast bardziej "ociężały" od swojego konkurenta.
+
+#### Praktyczne Wnioski
+
+Różnica między `foreach` i `forall` rzadko ma znaczenie, ale przy `foreach` trudniej sobie strzelić w stopę.
+</div>
+
+</div>
