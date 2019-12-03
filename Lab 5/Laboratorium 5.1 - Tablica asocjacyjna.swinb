@@ -1,0 +1,146 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Laboratorium 5.1 - Tablica asocjacyjna
+</div>
+
+<div class="nb-cell markdown" name="md2">
+Dotychczas używaliśmy struktur i predykatów niejako "wbudowanych" w środowisko SWI-Prolog. Dzisiaj pierwszy zobaczymy w akcji możliwoźć rozszerzania dostępnych predykatów za pomocą modułów - są one odpowiednikami paczek/klas z języków takich jak Python, Java, etc. Część z nich jest dostarczano w formie "bibliotek standardowych" i jest opisana w [dokumentacji SWI-Prolog](https://www.swi-prolog.org/pldoc/man?section=library), inne paczki stworzone przez społeczność są możliwe do zainstalowania lokalnie (w stylu npm, pip, etc.) i ich lista jest dostępna na [stronie projektu](https://www.swi-prolog.org/pack/list).
+
+PS listy również posiadają swój własny moduł, domyślnie są jednak ładowane automatycznie podczas startu SWI-Prologa.
+</div>
+
+<div class="nb-cell markdown" name="md35">
+## library(assoc)
+</div>
+
+<div class="nb-cell markdown" name="md36">
+Dzisiaj zajmiemy się jedną paczką znajdującą się w bibliotece standardowej. _assoc_ dostarcza nam tablicę asocjacyjną (słownik w stylu Python'a) zaimplementowaną w formie [drzewa AVL](https://pl.wikipedia.org/wiki/Drzewo_AVL). W odróżnieniu od list, drzewo AVL pozwala wykonywać standardowe operacje w czasie logarytmicznym względem rozmiaru drzewa. Do zaimportowania biblioteki należy posłużyć się predykatem _use_module/1_
+</div>
+
+<div class="nb-cell program" data-background="true" name="p1">
+:- use_module(library(assoc)).
+</div>
+
+<div class="nb-cell markdown" name="md3">
+Daje nam to dostęp do całego szeregu predykatów pozwalających na operowanie tablicami asocjacyjnymi. Wszystkie operacje są opisane w [dokumentacji modułu](https://www.swi-prolog.org/pldoc/man?section=summary-lib-assoc). 
+
+Poniżej pokażę tylko działanie kilku najczęściej używanych.
+</div>
+
+<div class="nb-cell markdown" name="md37">
+### Konstruktory
+</div>
+
+<div class="nb-cell markdown" name="md38">
+Zasadniczo istnieją dwa sposoby stworzenia tablicy asocjacyjnej:
+- stworzenie pustej tablicy:
+</div>
+
+<div class="nb-cell query" name="q1">
+empty_assoc(PustySłownik).
+</div>
+
+<div class="nb-cell markdown" name="md39">
+- przekształcenie listy zachowujących pary klucz-wartość
+</div>
+
+<div class="nb-cell query" name="q19">
+list_to_assoc([key1-val1,key2-val2],Słownik)
+</div>
+
+<div class="nb-cell markdown" name="md4">
+Przy okazji można zauważyć, że istnieją operacje odwrotne względem powyższej:
+</div>
+
+<div class="nb-cell query" name="q20">
+list_to_assoc([key1-val1,key2-val2],Słownik), assoc_to_list(Słownik, ListaPar), 
+assoc_to_keys(Słownik, ListaKluczy), assoc_to_values(Słownik, ListaWartości).
+</div>
+
+<div class="nb-cell markdown" name="md5">
+### Gettery
+
+Istnieją dwa sposoby "dobierania się" do wartości w tablicy. _get_assoc/3_ znajduje wartość dla *znanego* klucza. Nie różni się to zbytnio od pobierania elementów ze słownika w Javie/Pythonie:
+</div>
+
+<div class="nb-cell query" name="q21">
+list_to_assoc([key1-val1,key2-val2],Słownik), get_assoc(key1, Słownik, Value).
+</div>
+
+<div class="nb-cell markdown" name="md40">
+_gen_assoc/3_ służy do iterowania po wartościach słownika. W jego przypadku klucz również może być zmienną. Typowe zastosowanie może opierać się na pętli _foreach/2_ lub _forall/2_:
+</div>
+
+<div class="nb-cell query" name="q22">
+list_to_assoc([key1-val1,key2-val2],Słownik), 
+foreach(
+           gen_assoc(Key, Słownik, Value), 
+           format("~w : ~w\n", [Key, Value])
+).
+</div>
+
+<div class="nb-cell markdown" name="md41">
+### Settery
+</div>
+
+<div class="nb-cell markdown" name="md42">
+Dodawanie elementów jest jeszcze prostsze, służy do tego predykat _put_assoc/4_:
+</div>
+
+<div class="nb-cell query" name="q23">
+empty_assoc(PustySłownik), 
+put_assoc(key1, PustySłownik, val1, Słownik1), put_assoc(key2, Słownik1, val2, Słownik).
+</div>
+
+<div class="nb-cell markdown" name="md43">
+_put_assoc/4_ za równo dodaje nowe elementy, jak i może zastępować stare:
+</div>
+
+<div class="nb-cell query" name="q24">
+empty_assoc(PustySłownik), 
+put_assoc(key1, PustySłownik, val1, Słownik1), put_assoc(key1, Słownik1, val2, Słownik).
+</div>
+
+<div class="nb-cell markdown" name="md8">
+W celu usunięcia elementu z tablicy, należy posłużyć się _del_assoc/4_:
+</div>
+
+<div class="nb-cell query" name="q4">
+list_to_assoc([k1-3,k2-1,k3-0], Słownik), 
+del_assoc(k1, Słownik, V1, MniejszySłownik), 
+assoc_to_list(MniejszySłownik, MniejszaLista).
+</div>
+
+<div class="nb-cell markdown" name="md44">
+### Mapowanie
+</div>
+
+<div class="nb-cell markdown" name="md6">
+Podobnie jak listy, _assoc_ dostarcza metodą mapowania elementów tablicy. _map_assoc/2_ sprawdza czy wszystkie *wartości* w tablicy spełniają jakiś warunek:
+</div>
+
+<div class="nb-cell program" data-background="true" name="p6">
+dodatni(V) :- V &gt; 0.
+</div>
+
+<div class="nb-cell query" name="q2">
+list_to_assoc([k1-3,k2-1,k3-0], Słownik),
+map_assoc(dodatni, Słownik).
+</div>
+
+<div class="nb-cell markdown" name="md7">
+a _map_assoc/3_ mapuje wszystkie *wartości* w tablicy:
+</div>
+
+<div class="nb-cell program" name="p7">
+razy_dwa(Old,New) :- New is Old * 2.
+</div>
+
+<div class="nb-cell query" name="q3">
+list_to_assoc([k1-3,k2-1,k3-0], Słownik),
+map_assoc(razy_dwa, Słownik, SłownikRazyDwa),
+assoc_to_list(SłownikRazyDwa, ListaRazyDwa).
+</div>
+
+</div>

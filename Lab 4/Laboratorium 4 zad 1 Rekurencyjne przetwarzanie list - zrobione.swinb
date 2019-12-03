@@ -1,4 +1,4 @@
-<div class="notebook">
+﻿<div class="notebook">
 
 <div class="nb-cell markdown" name="md1">
 # Rekurencyjne przetwarzanie list - zadania
@@ -58,10 +58,10 @@ Napisz predykat _dodaj/3_, który dodaje element do listy na dowolnym jej indeks
 </div>
 
 <div class="nb-cell program" name="p4">
-dodaj(X,[],[X]).
+dodaj(E, L,[E|L]).
 
-dodaj(Y, [H|T],[H|NT]):-
-    dodaj(Y,T,NT).
+dodaj(T,[H|TE],[H|NT]):-
+dodaj(T,TE,NT).
 </div>
 
 <div class="nb-cell query" name="q3">

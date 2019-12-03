@@ -1,0 +1,203 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Laboratorium 5.3 - Logika drugiego rzędu
+</div>
+
+<div class="nb-cell markdown" name="md2">
+Charakterystyczną cechą języków funkcyjnych jest możliwość traktowania funkcji jako zwykłych obiektów języka. W Prologu ten sam efekt można uzyskać używając predykatów wyższego rzędu (predykatów, które przetwarzają inne predykaty).
+
+Dotychczas używaliśmy wbudowanych predykatów tego typu: _maplist/3_, _foldl/4_, _include/3_, _foreach/2_, _forall/2_, _findall/3_, etc. Wszystkie one brały jako jeden z argumentów nazwę predykatu lub gotowe zapytanie. Dzisiaj zobaczymy jak napisać podobne predykatu na własną rękę.
+</div>
+
+<div class="nb-cell markdown" name="md35">
+## _call_
+</div>
+
+<div class="nb-cell markdown" name="md36">
+Najbardziej fundamentalną operacją wyższego rzędu jest "wywoływanie" predykatów przekazanych w termie. Służy do tego predykat _call/1_:
+</div>
+
+<div class="nb-cell query" name="q5">
+call(writeln("to samo, co samo writeln/1")).
+</div>
+
+<div class="nb-cell markdown" name="md3">
+_call/1_ zachowuje się tak, jakby go nie było :) 
+
+Kluczowe jest to, że można go używać do wywoływania zapytań przekazanych z zewnątrz. Poniżej zapisana jest chałupnicza wersja pętli _forall/2_. Podobnie jak _forall/2_, zamienia wykonuje ona pętlę w oparciu o mechanizm _fail_.
+</div>
+
+<div class="nb-cell program" name="p1">
+dla_wszystkich(Warunek, Akcja) :-
+    call(Warunek),
+    call(Akcja), 
+    fail.
+dla_wszystkich(_, _).
+</div>
+
+<div class="nb-cell query" name="q1">
+dla_wszystkich(between(1,8,X), writeln(X)).
+</div>
+
+<div class="nb-cell markdown" name="md10">
+BTW _between/3_ jest odpowiednikiem `range` z Pythona. 
+
+Podbnie jak w ciałach klauzul. Istnieje możliwość łączenia zapytań przecinkiem, trzeba wtedy jednak pamiętać o nawiasowaniu:
+</div>
+
+<div class="nb-cell program" name="p2">
+dla_wszystkich(Warunek, Akcja) :-
+    call((Warunek, Akcja)),
+    fail.
+dla_wszystkich(_, _).
+</div>
+
+<div class="nb-cell markdown" name="md11">
+Niestety, ze względu na ograniczenia SWISH'a poniższy kod wysypie się błędem.
+</div>
+
+<div class="nb-cell query" name="q6">
+dla_wszystkich(between(1,8,X), writeln(X)).
+</div>
+
+<div class="nb-cell markdown" name="md4">
+Żeby uruchomić ten kod lokalnie na swojej maszynie, trzeba:
+1. mieć zainstalowany SWI-Prolog
+2. stworzyć plik tekstowy z roszerzeniem `.pl`, np. `dla_wszystkich.pl`. 
+3. w tym samym katalogu z poziomu terminala uruchomić `swipl`
+4. w konsoli Prologa wczytać plik z programem: `['dla_wszystkich.pl'].` (kropka jest ważna).
+5. `dla_wszystkich(between(1,8,X), writeln(X)).`
+
+Gdyby ktoś zapomniał kropki, zawsze ją może dostawić w nowej linijce. Jeżeli Prolog już zupełnie zgłupieje i zapyta, co ma zrobić (`Action (h for help) ?`), literka `h` pokaże listę komend, literka `a` przerwie aktualną operację. `halt.` zamyka linię komend Prologa.
+</div>
+
+<div class="nb-cell markdown" name="md12">
+#### Koniunkcja jako struktura danych
+</div>
+
+<div class="nb-cell markdown" name="md13">
+Nawiasy w poprzednim przykładzie pozwalały na łączenie zapytań w koniunkcję zapytań (ang. _conjuct_). Koniunkcja (ciało predykatu) przypomina pod wieloma względami zwykłą listę. Różni się głównie sposobem działania przecinka, który zachowuje się tak samo jak gilotyna `|` w przypadku list:
+</div>
+
+<div class="nb-cell query" name="q7">
+(a,b,c) = (H,T).
+</div>
+
+<div class="nb-cell markdown" name="md14">
+Idąc tym tropem, wywoływanie koniunkcji wygląda następująco:
+</div>
+
+<div class="nb-cell program" name="p4">
+wywołaj((H,T)) :- call(H), wywołaj(T).
+wywołaj((H)) :- call(H).
+</div>
+
+<div class="nb-cell query" name="q8">
+wywołaj((writeln('a'), writeln('b'), writeln('c'))).
+</div>
+
+<div class="nb-cell markdown" name="md15">
+Niestety, powyższa wersja jest troszkę zbyt naiwna, ponieważ:
+</div>
+
+<div class="nb-cell query" name="q9">
+(a) = a.
+</div>
+
+<div class="nb-cell markdown" name="md17">
+a co za tym idzie:
+</div>
+
+<div class="nb-cell query" name="q10">
+(H) = (a,b,c).
+</div>
+
+<div class="nb-cell markdown" name="md18">
+W efekcie `wywołaj((H))` wywoła się również dla koniunkcji. Poprawna wersja `wywołaj` wyglądałaby następująco:
+</div>
+
+<div class="nb-cell program" name="p6">
+wywołaj((H,T)) :- call(H), wywołaj(T).
+wywołaj((H)) :- H \= (_,_), call(H).
+</div>
+
+<div class="nb-cell markdown" name="md16">
+lub użyć operatora odcięcia:
+</div>
+
+<div class="nb-cell program" name="p5">
+wywołaj((H,T)) :- !, call(H), wywołaj(T).
+wywołaj((H)) :- call(H).
+</div>
+
+<div class="nb-cell markdown" name="md19">
+Na szczęście _call/1_ robi to wszystko za nas ;)
+</div>
+
+<div class="nb-cell markdown" name="md21">
+#### Inne przydatne predykaty do wywoływania zapytań:
+
+Istnieje więcej wariacji _call/1_, które często mogą być bardzo wygodne - wszystkie opisane są w [dokumentacji](https://www.swi-prolog.org/pldoc/man?section=metacall). Wśród najbardziej uprzejme są:
+- _call/N_ - `call(zapytanie(arg1), arg2, arg3)` działa tak samo jak `call(zapytanie(arg1,arg2,arg3))`
+- _ignore/1_ - działa tak samo jak _call_, ale udaje się nawet, jeżeli wywołanie się nie powiedzie
+- _once/1_ - wywołuje zapytanie, ale zwraca tylko pierwszy wynik
+- __setup_call_cleanup/3__ - zapytanie przekazywane jest jako drugi argument, pierwszy odpowiada przygotowaniu środowiska (tzw. setup); trzeci zaś sprzątaniu po wywołaniu zapytania (odpowiednik `finally` z Javy)
+</div>
+
+<div class="nb-cell markdown" name="md39">
+## Wywołanie =.. Term.
+
+Czasem potrzebujemy nie tylko wywołać przekazane zapytanie, ale także je przetworzyć lub stworzyć nowe zapytanie dynamicznie "z kodu". Służy do tego operator `=../2`, który zamienia termy/wywołania w listę i na odwrót:
+</div>
+
+<div class="nb-cell query" name="q21">
+Zapytanie =.. [nazwa_predykatu, pierwszy_argument, drugi_argument].
+</div>
+
+<div class="nb-cell query" name="q11">
+nazwa_predykatu(pierwszy_argument, drugi_argument) =.. Lista.
+</div>
+
+<div class="nb-cell markdown" name="md40">
+W połączeniu z _call/1_ pozwala na stworzenie takich operacji jak na przykład _maplist/3_, które w prymitywnej wersji wyglądałoby następująco:
+</div>
+
+<div class="nb-cell program" name="p9">
+mapuj(_, [], []).
+mapuj(Predykat, [H|T], [MH|MT]) :-
+    Zapytanie =.. [Predykat, H, MH],
+    call(Zapytanie),
+    mapuj(Predykat, T, MT).
+
+razy_dwa(X,Y) :- Y is X * 2.
+</div>
+
+<div class="nb-cell markdown" name="md20">
+Niestety, SWISH nie pozwoli na takie dynamiczne zapytanie - powyższy przykład należy uruchomić lokalnie z poniższym zapytaniem:
+</div>
+
+<div class="nb-cell query" name="q12">
+mapuj(razy_dwa, [1,2,3], Wynik).
+</div>
+
+<div class="nb-cell markdown" name="md5">
+Żeby uruchomić ten kod lokalnie na swojej maszynie, trzeba:
+1. mieć zainstalowany SWI-Prolog 
+2. stworzyć plik tekstowy z roszerzeniem ``.pl``, np. `mapuj.pl`. 
+3. w tym samym katalogu z poziomu terminala uruchomić `swipl`
+4. w konsoli Prologa wczytać plik z programem: `['mapuj.pl'].` (kropka jest ważna).
+5. `dla_wszystkich(between(1,8,X), writeln(X)).`
+
+Gdyby ktoś zapomniał kropki, zawsze ją może dostawić w nowej linijce. Jeżeli Prolog już zupełnie zgłupieje i zapyta, co ma zrobić (`Action (h for help) ?`), literka `h` pokaże listę komend, literka `a` przerwie aktualną operację. `halt.` zamyka linię komend Prologa.
+</div>
+
+<div class="nb-cell markdown" name="md43">
+#### Inne przydatne predykaty do analizowania termów:
+
+Poza `=..` istnieje wiele innych użytecznych predykatów opisanych w [dokumentacji](https://www.swi-prolog.org/pldoc/man?section=manipterm). Spośród nich wyróżniają się przede wszystkim:
+- _copy_term/2_, który kopiuje term tworząc nowe zmienne 
+- _term_variables/2_, który znajduje wszystkie zmienne w termie
+</div>
+
+</div>

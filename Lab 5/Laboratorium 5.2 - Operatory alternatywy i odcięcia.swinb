@@ -1,0 +1,291 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Laboratorium 5.2 - Operatory alternatywy i odcięcia
+</div>
+
+<div class="nb-cell markdown" name="md2">
+Dotychczas wszystkie nasze predykaty składały się z koniunkcji wywołań predykatów. Jest to w zupełni wystarczające do pisania w Prologu, jednak czasami bywa niewygodnie. Dzisiaj nauczymy się dwóch operatorów, które pozwalają na pisanie krótszych, często też bardziej wydajnych programów.
+</div>
+
+<div class="nb-cell markdown" name="md35">
+## Operator alternatywy
+</div>
+
+<div class="nb-cell markdown" name="md36">
+Jak wiemy, przecinek jest w Prologu operatorem koniunkcji:
+</div>
+
+<div class="nb-cell program" name="p1">
+koniunkcja :- writeln(a), writeln(b).
+</div>
+
+<div class="nb-cell markdown" name="md3">
+W powyższym programie zarówno `writeln(a)` jak i `writeln(b)` muszą się wykonać by _koniunkcja/0_ była prawdziwa:
+</div>
+
+<div class="nb-cell query" name="q1">
+koniunkcja.
+</div>
+
+<div class="nb-cell markdown" name="md4">
+Do wyrażenie alternatywy używaliśmy dotychczas kilku klauzul:
+</div>
+
+<div class="nb-cell program" name="p6">
+alternatywa :- writeln(a).
+alternatywa :- writeln(b).
+</div>
+
+<div class="nb-cell markdown" name="md37">
+Teraz wystarczy, żeby udało się jedno z zapytań `writeln(a)` *lub* `writeln(b)`, żeby alternatywa była prawdziwa:
+</div>
+
+<div class="nb-cell query" name="q19">
+alternatywa.
+</div>
+
+<div class="nb-cell markdown" name="md38">
+Okazuje się, że istnieje możliwość skrócenia powyższego zapisu. Średnik _;/2_ jest w Prologu operatorem alternatywy, umożliwiającym zapisanie alternatywy w jednej klauzuli. Poniższy program działa tak samo jak poprzedni.
+</div>
+
+<div class="nb-cell program" name="p7">
+alternatywa :- writeln(a) ; writeln(b).
+</div>
+
+<div class="nb-cell query" name="q20">
+alternatywa.
+</div>
+
+<div class="nb-cell markdown" name="md39">
+### Uwaga
+
+Koniunkcja wiąże w Prologu *silniej* niż alternatywa!
+</div>
+
+<div class="nb-cell program" name="p8">
+alternatywa :- writeln(a), writeln(b) ; writeln(c), writeln(d).
+</div>
+
+<div class="nb-cell query" name="q21">
+alternatywa.
+</div>
+
+<div class="nb-cell markdown" name="md40">
+Powyższy program jest zatem równoważny dwóm klauzulom:
+</div>
+
+<div class="nb-cell program" name="p9">
+alternatywa :- writeln(a), writeln(b). 
+alternatywa :- writeln(c), writeln(d).
+</div>
+
+<div class="nb-cell markdown" name="md41">
+W celu uzyskania alternatywy niejako w środku ciała klauzulu, trzeba posłużyć się nawiasami:
+</div>
+
+<div class="nb-cell program" name="p10">
+alternatywa :-  
+    writeln(a), 
+    (writeln(b) ; writeln(c)), 
+    writeln(d).
+</div>
+
+<div class="nb-cell query" name="q22">
+alternatywa
+</div>
+
+<div class="nb-cell markdown" name="md42">
+, co jest tożsame z dwiema klauzulami:
+</div>
+
+<div class="nb-cell program" name="p11">
+alternatywa :- writeln(a), writeln(b), writeln(d).
+alternatywa :- writeln(a), writeln(c), writeln(d).
+</div>
+
+<div class="nb-cell markdown" name="md43">
+### Rada
+Podobnie jak w innych językach programowania, w Prologu warto tworzyć jak najwięcej mały predykatów. Używanie pomocnicznych klauzul jest często bardziej czytelne od operatora alternatywy.
+</div>
+
+<div class="nb-cell markdown" name="md5">
+## Operator odcięcia (cut)
+</div>
+
+<div class="nb-cell markdown" name="md6">
+Jak doskonale już wiemy, Prolog podczas przetwarzania zapytań, sprawdza wszystkie możliwe rozwiązania, "nawracając" (ang. backtracking) w przypadku poniesienia porażki. Z tego powodu, podczas definicji predykatów rekurencyjnych, na samym początku ciała predykatu musimy sprawdzać, czy mamy do czynienia z przypadkiem bazowym. Poniżej znajduje się klasyczna implementacja silni w Prologu:
+</div>
+
+<div class="nb-cell program" name="p12">
+silnia(0,1).
+silnia(X,W) :- 
+    X &gt; 0, 
+    PX is X - 1,
+    silnia(PX, PW),
+    W is PW * X.
+</div>
+
+<div class="nb-cell query" name="q2">
+silnia(5,W).
+</div>
+
+<div class="nb-cell markdown" name="md44">
+W pierwszej linijce, pierwszy argument predykatu mówi, że tylko dla wartości `0` wynikiem jest `1`. Dla żadnej innej wartości ta klauzula się *nie* wywoła.
+
+`X &gt; 0` w linijce `3` sprawdza, czy przypadkiem nie mamt do czynienia z przypadkiem bazowym. Co się stanie, jeżeli ją usuniemy?
+</div>
+
+<div class="nb-cell program" name="p13">
+silnia(0,1).
+silnia(X,W) :- 
+%    X &gt; 0, 
+    PX is X - 1,
+    silnia(PX, PW),
+    W is PW * X.
+</div>
+
+<div class="nb-cell query" name="q23">
+silnia(5,W).
+</div>
+
+<div class="nb-cell markdown" name="md7">
+Pierwszy wynik otrzymamy prawidłowy, kiedy jednak spytamy o kolejny, Prolog wejdzie w nieskończoną rekursję! Wszystko dlatego, że druga klauzula wykonała się dla wartości `0`.
+</div>
+
+<div class="nb-cell markdown" name="md45">
+#### Analogia Pythonowa 1
+</div>
+
+<div class="nb-cell markdown" name="md46">
+Powyższy kod (z odkomentowaną linijką 3) odpowiada poniższemu napisanemu w języku Python:
+
+==
+def silnia(x):
+    if x == 0:
+    	return 1
+    if x &gt; 0:
+    	return x*silnia(x-1)
+==
+</div>
+
+<div class="nb-cell markdown" name="md48">
+Jest to poprawny kod, ale przy założeniu, że użytkownik nie poda żadnych liczb ujemnych, można go zoptymalizować wstawiając `else:` w miejsce `if x &gt; 0:`
+</div>
+
+<div class="nb-cell markdown" name="md49">
+==
+def silnia(x):
+    if x == 0:
+        return 1
+    else:
+        return x*silnia(x-1)
+==
+</div>
+
+<div class="nb-cell markdown" name="md50">
+Zysk jest podwójny:
+1. kod jest czytelniejszy
+2. kod jest szybszy, teraz wystarczy tylko jedno sprawdzenie, czy `x` jest równy `0`
+</div>
+
+<div class="nb-cell markdown" name="md47">
+### Else w Prologu
+</div>
+
+<div class="nb-cell markdown" name="md51">
+Aby uzyskać podobny efekt w Prologu, można się posłużyć operatorem odcięcia, który przyjmuje postać wykrzynika. Poniższy kod w Prologu odpowiada wersji z *else*.
+</div>
+
+<div class="nb-cell program" name="p14">
+silnia(0,1) :- !.
+silnia(X,W) :- 
+    PX is X - 1,
+    silnia(PX, PW),
+    W is PW * X.
+</div>
+
+<div class="nb-cell query" name="q3">
+silnia(5,W).
+</div>
+
+<div class="nb-cell markdown" name="md8">
+Wykrzynik sprawia, że Prolog *zapomina* wszystkie alternatywy względem aktualnej gałęzi obliczeń. Zatem jeżeli pierwszym argumentem silni będzie 0, Prolog zapomni, że istnieje jeszcze druga definicja silni.
+</div>
+
+<div class="nb-cell markdown" name="md52">
+### Szczegóły, szczególiki
+</div>
+
+<div class="nb-cell markdown" name="md53">
+Napotkanie operatora odcięcia sprawia, że Prolog zapomina o  alternatywach wytworzonych przez *wszystko, co jest nad nim w jego klauzuli*. W przypadku silni, _nad_ wykrzyknikiem jest tylko sama głowa klauzuli. Prolog zapomina zatem o wszystkich innych alternatywnych klauzulach dla silni.
+
+Poniższy kod pokazuje bardziej złożoną sytuację:
+</div>
+
+<div class="nb-cell program" name="p15">
+a :- writeln(a1), b.
+a :- writeln(a2).
+
+b :- writeln(b1), c, writeln('!'), !, d.
+b :- writeln(b2).
+
+c :- writeln(c1).
+c :- writeln(c2).
+
+d :- writeln(d1).
+d :- writeln(d2).
+</div>
+
+<div class="nb-cell markdown" name="md54">
+Proszę przeczytać powyższy program i następnie przyjrzeć się wszystkim wynikom poniższego zapytania:
+</div>
+
+<div class="nb-cell query" name="q24">
+a.
+</div>
+
+<div class="nb-cell markdown" name="md55">
+Pierwszy wynik to proste przejście ścieżką obliczeń: `a1 -&gt; b1 -&gt; c1 -&gt; ! -&gt; klauzula(d1)`.  
+
+Zgodnie z tym, o czym mówiliśmy wcześniej: wykrzyknik usuwa tylko alternatywy wytworzone nad nim w jego klauzuli, mianowicie alternatywy `c2` i `b2`. 
+*Nie usuwa* natomiast alternatywy pod nim, czyli `d2` (drugi wynik);
+ani sprzed jego klauzuli, w tym wypadku `a2` (trzeci wynik).
+</div>
+
+<div class="nb-cell markdown" name="md9">
+### Uwagi praktyczne:
+
+Operator odcięcia pozwala zoptymalizować kod poprzez usunięcie niepotrzebnych punktów wyboru i duplikatów kodu, ma jednak dwie duże wady:
+
+- Kod staje się znacznie bardziej wrażliwy na kolejność klauzul. Gałąż `else` zawsze musi być ostatnią klauzulą należącą do predykatu. Zmieniając kolejność klauzul zawierających wykrzyknik zmieni wyniki. Kod staje się przez to mniej deklaratywny. Poniżej pokazany jest popsuty predykat silni:
+</div>
+
+<div class="nb-cell program" name="p17">
+silnia(X,W) :- 
+    PX is X - 1,
+    silnia(PX, PW),
+    W is PW * X.
+silnia(0,1) :- !.
+</div>
+
+<div class="nb-cell query" name="q25">
+silnia(5,X).
+</div>
+
+<div class="nb-cell markdown" name="md56">
+- Kod używający wykrzyknika przestaje być odwracalny. Intuicyjnie: usunięcie gałęzi idąc w jednym kierunku obliczeń uniemożliwia start obliczeń "od końca". Poniżej widoczny jest popsuty predykaty liczący długość listy:
+</div>
+
+<div class="nb-cell program" name="p16">
+dlugosc([], 0) :- !.
+dlugosc([_|T], D) :-
+    dlugosc(T, PD),
+    D is PD + 1.
+</div>
+
+<div class="nb-cell query" name="q4">
+dlugosc(X, 5).
+</div>
+
+</div>
