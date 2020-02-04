@@ -1,0 +1,162 @@
+<div class="notebook">
+
+<div class="nb-cell markdown" name="md1">
+# Laboratorium 6.1 - Operatory
+</div>
+
+<div class="nb-cell markdown" name="md2">
+Składnia Prologa jest bardzo prosta i aż do dzisiaj nic w niej się nie zmieniało: były predykaty, były termy i było trochę wbudowanych operatorów, tj. `+`, `-`, `|`, `:-`, `\+`, etc.
+Dzisiaj dowiemy się w końcu, czym są operatory i jak dodawać własne operatory do języka.
+</div>
+
+<div class="nb-cell markdown" name="md35">
+## Lukier składniowy
+</div>
+
+<div class="nb-cell markdown" name="md36">
+Operatory w rzeczywistości to nic innego jak [lukier składniowy](https://pl.wikipedia.org/wiki/Lukier_sk%C5%82adniowy) (ang. syntactic sugar), który pozwala na ładniejsze zapisywanie termów.
+
+W rzeczywistośc każdy operator to zwykły symbol termu, np.
+</div>
+
+<div class="nb-cell query" name="q5">
+4 + 3 = +(4,3)
+</div>
+
+<div class="nb-cell query" name="q6">
+[a|[b]] = '[|]'(a,[b])
+</div>
+
+<div class="nb-cell query" name="q7">
+(a, b) = ','(a,b)
+</div>
+
+<div class="nb-cell markdown" name="md9">
+Innymi słowy operatory są tylko po to, żeby milej czytało się kod. W odróżnieniu od operatorów w większości języków programowania (np. C++), programista ma możliwość tworzenia własnych operatorów przy pomocy predykatu _op/3_. Dokumentacja tego predykatu mówi właściwie wszystko co potrzebne, reszta tej instrukcji będzie starała się wytłumaczyć operatory w bardziej przystępny sposób.
+</div>
+
+<div class="nb-cell markdown" name="md10">
+### Przykład
+</div>
+
+<div class="nb-cell markdown" name="md11">
+Zacznijmy od przykładu prostego operatora o nazwie `i`, który ma działać dokładnie jak `i` w języku polskim:
+</div>
+
+<div class="nb-cell program" data-background="true" name="p1">
+:- op(500, xfy, i).
+</div>
+
+<div class="nb-cell markdown" name="md12">
+Od teraz możemy posługiwać się `i` jak zwykłym spójnikiem:
+</div>
+
+<div class="nb-cell query" name="q8">
+mama i tata i ja = X
+</div>
+
+<div class="nb-cell query" name="q9">
+rodzina(mama i tata i ja) = rodzina(X).
+</div>
+
+<div class="nb-cell query" name="q10">
+mama i tata i ja = X i Y i Z
+</div>
+
+<div class="nb-cell query" name="q11">
+mama i tata i ja = X i Y
+</div>
+
+<div class="nb-cell markdown" name="md3">
+Poniżej wyjaśnimy kolejne elementy definicji predykatu.
+</div>
+
+<div class="nb-cell markdown" name="md37">
+### Priorytet (ang. precedence)
+</div>
+
+<div class="nb-cell markdown" name="md13">
+Priorytet operatora mówi, jak silnie wiąże swoje argumenty. Intuicyjnie, wiąże się to z kolejnością wykonywania działań w arytmetyce, gdzie mnożenie `*` wiąże bardziej (wykonuje się wcześniej) niż `+`. 
+
+Im mniejsza wartość liczbowa priorytetu, tym jest on wyższy, np. mnożenie w Prologu priorytet 400, a dodawanie 500.
+</div>
+
+<div class="nb-cell query" name="q12">
+5 + 3 * 4 = +(5, *(3, 4)).
+</div>
+
+<div class="nb-cell markdown" name="md14">
+Priorytety pozwalają na łączenie operatorów bez stosowania nawiasów. Nic nie stoi na przeszkodzie, żeby użyć nawiasów, aby wymusić kolejność wykonywania obliczeń:
+</div>
+
+<div class="nb-cell query" name="q13">
+(5 + 3) * 4 = *(+(5, 3), 4)
+</div>
+
+<div class="nb-cell markdown" name="md15">
+### Typ
+</div>
+
+<div class="nb-cell markdown" name="md16">
+Istnieją siedem typów operatorów w Prologu, które można pogrupować w trzy rodziny:
+1. operatory prefiksowe, które przyjmują jeden argument, który znajduje się *po* operatorze. Istnieją dwa typy prefiksowe  `fx`, `fy` (pozycja `f` mówi o tym, że operator występuje przed argumentem). Przykładem takiego operatora może być negacja `\+`.
+2. operatory postfiksowe, które różnią się od prefiksowych jedynie pozycją argumentu, który znajduje się *przed* operatorem: `xf`, `yf`. Nie istnieje żaden wbudowane operator tego typu.
+3. operatory infiksowe, które przyjmują dwa argumnenty i znajdują się *między* nimi: `xfx`, `xfy`, `yfx`. Przykładów takich operatorów jest mnóstwo: `+`, `-`, `*`, ``|``, ``&gt;``...
+</div>
+
+<div class="nb-cell markdown" name="md38">
+O ile podział na pre-/post-/in- wydaje się jasny, różnica między argumentami `x` i `y` wymaga dodatkowego wyjaśnienia. Formalnie argument `x` musi wiązać *mocniej niż f*, `y` zaś może wiązać *mocniej lub tak samo jak f*. Ma to znaczenie podczas łączenie większej liczby operatorów. Zdefiniujmy dwa operatory jednoargumentowe o bardzo wysokim priorytecie i różnych typach:
+</div>
+
+<div class="nb-cell program" name="p2">
+:- op(100, fx, wewnątrz).
+:- op(100, fy, w).
+</div>
+
+<div class="nb-cell markdown" name="md17">
+Operator `wewnątrz` nie pozwala, aby jego argument miał taki sam priorytet jak on. Niemożliwe jest zatem jego zagnieżdzanie:
+</div>
+
+<div class="nb-cell query" name="q1">
+wewnątrz wewnątrz wewnątrz domu = X.
+</div>
+
+<div class="nb-cell markdown" name="md18">
+`w` nie ma tego problemu:
+</div>
+
+<div class="nb-cell query" name="q14">
+w w w domu = X.
+</div>
+
+<div class="nb-cell markdown" name="md39">
+Największe znaczenie ma to w operatorach infiksowych, ponieważ pozwala na budowanie łańcuchów operatorów o tym samym priorytecie:
+</div>
+
+<div class="nb-cell query" name="q15">
+5 + 3 - 3 + 2 = +(-(+(5, 3),3),2)
+</div>
+
+<div class="nb-cell markdown" name="md19">
+Powyższe zapytanie pokazuje kolejność wykonywania obliczeń (kolejność nawiasowania) od *lewej do prawej*. Wynika to z definicji dodawania i odejmowania - oba operatory mają typ `yfx`, który jednoznacznie wskazuje, że zagnieżdzanie może odbywać się tylko w lewą stronę. `xfy` zagnieżdżałoby operatory w prawo (tak działa chociażby ``|``), `xfx` wyklucza jakiekolwiek zagnieżdżanie (tak działają operatory porównania `&gt;`, `&lt;`, etc. oraz `is`).
+</div>
+
+<div class="nb-cell markdown" name="md20">
+### Nazwa
+</div>
+
+<div class="nb-cell markdown" name="md21">
+Na koniec najprostsze :) Naza to po prostu postać tekstowa operatora i może to być praktycznie dowolny ciąg znaków nieprzerwany spacją.
+</div>
+
+<div class="nb-cell program" name="p3">
+:- op(600, xf, koniec). 
+:- op(500, xfx, to).
+:- op(400, xfy, i).
+</div>
+
+<div class="nb-cell query" name="q2">
+koniec(X) = operatory to priorytet i typ i nazwa koniec
+</div>
+
+</div>
